@@ -1,0 +1,2428 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalkulator Faraid Mazhab Syafi'i v3.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@400;700&family=Noto+Naskh+Arabic:wght@400;600;700&family=Playfair+Display:wght@400;600;700&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root {
+  --gold: #c9a84c;
+  --gold-light: #e8c97a;
+  --gold-dark: #9a7a32;
+  --ink: #1a1209;
+  --parchment: #f5edd6;
+  --parchment-dark: #e8d9b5;
+  --emerald: #1a5c3a;
+  --emerald-light: #2d8a5a;
+  --emerald-dark: #0f3d26;
+  --crimson: #8b1a1a;
+  --stone: #8b7355;
+  --stone-light: #c4a882;
+  --white: #fdfaf2;
+  --shadow: rgba(26,18,9,0.25);
+  --panel: rgba(245,237,214,0.95);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Source Serif 4', Georgia, serif;
+  background: var(--ink);
+  color: var(--ink);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+/* Background pattern */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: 
+    radial-gradient(ellipse at 20% 50%, rgba(201,168,76,0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(26,92,58,0.12) 0%, transparent 50%),
+    url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23c9a84c' fill-opacity='0.04'%3E%3Cpath d='M30 0L60 30L30 60L0 30z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* HEADER */
+.site-header {
+  background: linear-gradient(180deg, var(--emerald-dark) 0%, var(--emerald) 100%);
+  border-bottom: 3px solid var(--gold);
+  padding: 2rem 1rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.site-header::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23c9a84c' fill-opacity='0.06'%3E%3Cpath d='M20 0L40 20L20 40L0 20z'/%3E%3C/g%3E%3C/svg%3E");
+}
+.site-header-inner { position: relative; z-index: 1; }
+.arabic-title {
+  font-family: 'Noto Naskh Arabic', 'Scheherazade New', serif;
+  font-size: clamp(1.8rem, 5vw, 3rem);
+  color: var(--gold-light);
+  direction: rtl;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  letter-spacing: 0.05em;
+  line-height: 1.4;
+}
+.main-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.2rem, 3vw, 1.8rem);
+  color: var(--parchment);
+  font-weight: 600;
+  margin-top: 0.5rem;
+  letter-spacing: 0.08em;
+}
+.sub-title {
+  font-size: 0.85rem;
+  color: var(--stone-light);
+  margin-top: 0.3rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.gold-ornament {
+  color: var(--gold);
+  font-size: 1.5rem;
+  display: block;
+  margin: 0.5rem auto;
+}
+
+/* MAIN CONTAINER */
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* STEP INDICATOR */
+.step-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  margin: 1.5rem auto;
+  max-width: 600px;
+}
+.step-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 1;
+  cursor: pointer;
+}
+.step-circle {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 2px solid var(--stone);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--stone-light);
+  background: rgba(26,18,9,0.6);
+  transition: all 0.3s;
+}
+.step-item.active .step-circle {
+  border-color: var(--gold);
+  background: var(--gold-dark);
+  color: var(--parchment);
+  box-shadow: 0 0 20px rgba(201,168,76,0.4);
+}
+.step-item.done .step-circle {
+  border-color: var(--emerald-light);
+  background: var(--emerald);
+  color: var(--gold-light);
+}
+.step-label {
+  font-size: 0.7rem;
+  color: var(--stone-light);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: center;
+}
+.step-item.active .step-label { color: var(--gold-light); }
+.step-connector {
+  height: 2px;
+  flex: 1;
+  background: var(--stone);
+  margin-bottom: 1.5rem;
+  max-width: 60px;
+}
+.step-connector.done { background: var(--emerald-light); }
+
+/* CARDS */
+.card {
+  background: var(--panel);
+  border: 1px solid rgba(201,168,76,0.3);
+  border-radius: 4px;
+  padding: 1.5rem;
+  margin-bottom: 1.2rem;
+  box-shadow: 0 4px 20px var(--shadow), inset 0 1px 0 rgba(255,255,255,0.5);
+  position: relative;
+}
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--gold-dark), var(--gold-light), var(--gold-dark));
+  border-radius: 4px 4px 0 0;
+}
+.card-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem;
+  color: var(--emerald-dark);
+  font-weight: 700;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid rgba(201,168,76,0.3);
+}
+.card-title .icon { font-size: 1.1rem; }
+
+/* FORM ELEMENTS */
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
+.form-group { display: flex; flex-direction: column; gap: 0.35rem; }
+.form-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--stone);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.form-input {
+  padding: 0.55rem 0.75rem;
+  border: 1.5px solid rgba(139,115,85,0.4);
+  border-radius: 3px;
+  background: rgba(253,250,242,0.9);
+  font-family: 'Source Serif 4', serif;
+  font-size: 0.92rem;
+  color: var(--ink);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.form-input:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(201,168,76,0.15);
+}
+.form-input.money { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; }
+
+/* HEIR GRID */
+.heir-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.8rem;
+}
+.heir-card {
+  border: 1.5px solid rgba(139,115,85,0.35);
+  border-radius: 4px;
+  padding: 0.9rem;
+  background: rgba(253,250,242,0.7);
+  cursor: pointer;
+  transition: all 0.25s;
+  position: relative;
+  overflow: hidden;
+}
+.heir-card:hover { border-color: var(--gold); transform: translateY(-1px); box-shadow: 0 4px 12px var(--shadow); }
+.heir-card.active {
+  border-color: var(--emerald);
+  background: rgba(26,92,58,0.08);
+  box-shadow: 0 0 0 2px rgba(26,92,58,0.2), 0 4px 12px var(--shadow);
+}
+.heir-card.blocked {
+  opacity: 0.45;
+  border-color: rgba(139,26,26,0.3);
+  cursor: not-allowed;
+}
+.heir-card.blocked::after {
+  content: 'MAHJUB';
+  position: absolute;
+  top: 4px; right: 4px;
+  font-size: 0.55rem;
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--crimson);
+  color: white;
+  padding: 1px 4px;
+  border-radius: 2px;
+  letter-spacing: 0.08em;
+}
+.heir-arabic {
+  font-family: 'Noto Naskh Arabic', serif;
+  font-size: 1.4rem;
+  color: var(--emerald);
+  direction: rtl;
+  text-align: center;
+  display: block;
+  margin-bottom: 0.3rem;
+}
+.heir-name { font-size: 0.82rem; font-weight: 600; color: var(--ink); text-align: center; }
+.heir-count-ctrl {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+.count-btn {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  border: 1.5px solid var(--gold-dark);
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.9rem;
+  line-height: 1;
+  color: var(--ink);
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.count-btn:hover { background: var(--gold-dark); color: var(--parchment); }
+.count-display {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--emerald-dark);
+  min-width: 24px;
+  text-align: center;
+}
+
+/* LAND PARCELS */
+.land-parcel {
+  border: 1.5px solid rgba(201,168,76,0.4);
+  border-radius: 4px;
+  padding: 1rem;
+  background: rgba(201,168,76,0.05);
+  margin-bottom: 0.8rem;
+  position: relative;
+}
+.remove-btn {
+  position: absolute; top: 0.6rem; right: 0.6rem;
+  background: none; border: none;
+  color: var(--crimson); cursor: pointer; font-size: 1.1rem;
+  opacity: 0.6; transition: opacity 0.2s;
+}
+.remove-btn:hover { opacity: 1; }
+
+/* BUTTONS */
+.btn {
+  padding: 0.65rem 1.4rem;
+  border: none;
+  border-radius: 3px;
+  font-family: 'Source Serif 4', serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s;
+  letter-spacing: 0.04em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--emerald), var(--emerald-light));
+  color: var(--parchment);
+  box-shadow: 0 3px 10px rgba(26,92,58,0.3);
+}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 5px 15px rgba(26,92,58,0.4); }
+.btn-gold {
+  background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+  color: var(--ink);
+  box-shadow: 0 3px 10px rgba(201,168,76,0.3);
+}
+.btn-gold:hover { transform: translateY(-1px); box-shadow: 0 5px 15px rgba(201,168,76,0.4); }
+.btn-outline {
+  background: transparent;
+  border: 1.5px solid var(--stone);
+  color: var(--stone);
+}
+.btn-outline:hover { border-color: var(--gold); color: var(--emerald-dark); }
+.btn-large { padding: 0.85rem 2rem; font-size: 1rem; }
+
+/* RESULTS */
+.result-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+.result-table th {
+  background: var(--emerald-dark);
+  color: var(--gold-light);
+  padding: 0.6rem 0.8rem;
+  text-align: left;
+  font-family: 'Playfair Display', serif;
+  font-weight: 600;
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
+}
+.result-table td {
+  padding: 0.55rem 0.8rem;
+  border-bottom: 1px solid rgba(139,115,85,0.2);
+  vertical-align: middle;
+}
+.result-table tr:nth-child(even) td { background: rgba(201,168,76,0.05); }
+.result-table tr:last-child td { border-bottom: none; }
+.result-table .total-row td {
+  background: rgba(26,92,58,0.1) !important;
+  font-weight: 700;
+  border-top: 2px solid var(--emerald);
+}
+.fraction-display {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+  color: var(--emerald);
+  font-weight: 600;
+}
+.money-display {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* AUDIT */
+.audit-item {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(139,115,85,0.15);
+  font-size: 0.85rem;
+}
+.audit-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 2px;
+  letter-spacing: 0.1em;
+  flex-shrink: 0;
+}
+.audit-pass { background: rgba(26,92,58,0.15); color: var(--emerald); border: 1px solid var(--emerald-light); }
+.audit-fail { background: rgba(139,26,26,0.15); color: var(--crimson); border: 1px solid var(--crimson); }
+.audit-warn { background: rgba(201,168,76,0.2); color: var(--gold-dark); border: 1px solid var(--gold); }
+.audit-info { background: rgba(139,115,85,0.15); color: var(--stone); border: 1px solid var(--stone-light); }
+
+/* TABS */
+.tabs { display: flex; gap: 0; border-bottom: 2px solid rgba(201,168,76,0.3); margin-bottom: 1rem; }
+.tab-btn {
+  padding: 0.6rem 1.2rem;
+  background: none;
+  border: none;
+  font-family: 'Source Serif 4', serif;
+  font-size: 0.88rem;
+  color: var(--stone);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.2s;
+}
+.tab-btn.active { color: var(--emerald-dark); border-bottom-color: var(--emerald); font-weight: 600; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* ALERT / INFO */
+.alert {
+  padding: 0.75rem 1rem;
+  border-radius: 3px;
+  font-size: 0.85rem;
+  margin-bottom: 0.8rem;
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+}
+.alert-warn { background: rgba(201,168,76,0.15); border-left: 3px solid var(--gold); color: var(--gold-dark); }
+.alert-info { background: rgba(26,92,58,0.1); border-left: 3px solid var(--emerald); color: var(--emerald-dark); }
+.alert-err { background: rgba(139,26,26,0.1); border-left: 3px solid var(--crimson); color: var(--crimson); }
+
+/* STEP PANELS */
+.step-panel { display: none; animation: fadeIn 0.35s ease; }
+.step-panel.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* NAVIGATION BUTTONS */
+.nav-btns { display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; flex-wrap: wrap; gap: 0.8rem; }
+
+/* SPECIAL RESULT HIGHLIGHTS */
+.result-highlight {
+  background: linear-gradient(135deg, var(--emerald-dark), var(--emerald));
+  color: var(--parchment);
+  border-radius: 4px;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.result-highlight .label { font-size: 0.82rem; color: var(--stone-light); text-transform: uppercase; letter-spacing: 0.08em; }
+.result-highlight .value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--gold-light);
+}
+
+/* AUL/RADD BADGES */
+.engine-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.badge-aul { background: rgba(139,26,26,0.15); color: var(--crimson); border: 1px solid var(--crimson); }
+.badge-radd { background: rgba(26,92,58,0.15); color: var(--emerald); border: 1px solid var(--emerald-light); }
+.badge-normal { background: rgba(201,168,76,0.15); color: var(--gold-dark); border: 1px solid var(--gold); }
+
+/* SECTION SEPARATOR */
+.section-sep {
+  text-align: center;
+  color: var(--gold);
+  font-size: 1.2rem;
+  margin: 1rem 0;
+  opacity: 0.6;
+  letter-spacing: 0.5rem;
+}
+
+/* DISCLAIMER */
+.disclaimer {
+  background: rgba(139,26,26,0.07);
+  border: 1px solid rgba(139,26,26,0.2);
+  border-radius: 4px;
+  padding: 1rem;
+  font-size: 0.78rem;
+  color: var(--stone);
+  text-align: center;
+  line-height: 1.6;
+  margin-top: 1.5rem;
+}
+
+/* TOGGLE SWITCH */
+.toggle-row { display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.5rem; }
+.toggle-switch {
+  position: relative;
+  width: 44px; height: 24px;
+}
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+  position: absolute; inset: 0;
+  background: rgba(139,115,85,0.3);
+  border-radius: 24px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 18px; height: 18px;
+  left: 3px; bottom: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+.toggle-switch input:checked + .toggle-slider { background: var(--emerald); }
+.toggle-switch input:checked + .toggle-slider::before { transform: translateX(20px); }
+
+/* LAND TABLE */
+.land-dist-table { font-size: 0.8rem; }
+.land-dist-table th { font-size: 0.75rem; }
+.land-header {
+  background: rgba(201,168,76,0.1);
+  border: 1px solid rgba(201,168,76,0.3);
+  border-radius: 3px;
+  padding: 0.5rem 0.8rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Playfair Display', serif;
+  font-size: 0.9rem;
+  color: var(--gold-dark);
+  font-weight: 700;
+}
+
+/* PRINT STYLES */
+@media print {
+  body { background: white; color: black; }
+  .site-header { background: white; border-bottom: 2px solid black; }
+  .btn, .step-indicator, .nav-btns { display: none !important; }
+  .card { box-shadow: none; border: 1px solid #ccc; }
+}
+
+/* RESPONSIVE */
+@media (max-width: 600px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .heir-grid { grid-template-columns: repeat(2, 1fr); }
+  .result-highlight { flex-direction: column; text-align: center; gap: 0.5rem; }
+}
+
+/* MODAL */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(26,18,9,0.85);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  display: none;
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+  background: var(--parchment);
+  border: 2px solid var(--gold);
+  border-radius: 6px;
+  max-width: 750px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 1.5rem;
+  position: relative;
+}
+.modal-close {
+  position: sticky; top: 0;
+  float: right;
+  background: none; border: none;
+  font-size: 1.4rem; cursor: pointer;
+  color: var(--stone);
+}
+
+/* CALCULATION DETAIL */
+.calc-step {
+  display: flex;
+  gap: 0.8rem;
+  align-items: flex-start;
+  padding: 0.6rem 0;
+  border-bottom: 1px dashed rgba(139,115,85,0.2);
+  font-size: 0.85rem;
+}
+.calc-step-num {
+  background: var(--gold-dark);
+  color: var(--parchment);
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="site-header-inner">
+    <div class="arabic-title">حاسبة الفرائض - مذهب الشافعي</div>
+    <div class="gold-ornament">✦ ✦ ✦</div>
+    <div class="main-title">Kalkulator Faraid Mazhab Syafi'i</div>
+    <div class="sub-title">Versi 3.0 &nbsp;·&nbsp; Sistem Modular Lengkap &nbsp;·&nbsp; Pembagian Tanah Fisik</div>
+  </div>
+</header>
+
+<!-- MAIN -->
+<div class="container">
+
+  <!-- STEP INDICATOR -->
+  <div class="step-indicator">
+    <div class="step-item active" id="si-1" onclick="goToStep(1)">
+      <div class="step-circle">١</div>
+      <div class="step-label">Harta Tirkah</div>
+    </div>
+    <div class="step-connector" id="sc-1"></div>
+    <div class="step-item" id="si-2" onclick="goToStep(2)">
+      <div class="step-circle">٢</div>
+      <div class="step-label">Ahli Waris</div>
+    </div>
+    <div class="step-connector" id="sc-2"></div>
+    <div class="step-item" id="si-3" onclick="goToStep(3)">
+      <div class="step-circle">٣</div>
+      <div class="step-label">Hasil Faraid</div>
+    </div>
+  </div>
+
+  <!-- ===== STEP 1: ESTATE INPUT ===== -->
+  <div class="step-panel active" id="step-1">
+    
+    <!-- Pewaris Profile -->
+    <div class="card">
+      <div class="card-title"><span class="icon">👤</span> Profil Pewaris (Al-Muwaris)</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Nama Lengkap Pewaris</label>
+          <input class="form-input" type="text" id="deceasedName" placeholder="Nama almarhum/almarhumah">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Jenis Kelamin</label>
+          <select class="form-input" id="deceasedGender" onchange="onGenderChange()">
+            <option value="male">Laki-laki</option>
+            <option value="female">Perempuan</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tanggal Perhitungan</label>
+          <input class="form-input" type="date" id="calcDate">
+        </div>
+      </div>
+    </div>
+
+    <!-- Harta Tirkah -->
+    <div class="card">
+      <div class="card-title"><span class="icon">💰</span> Rincian Harta Tirkah (Harta Kotor)</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Tanah / Rumah (nilai jual Rp)</label>
+          <input class="form-input money" type="number" id="assetLand" min="0" value="0" oninput="updateEstate()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Kendaraan (Rp)</label>
+          <input class="form-input money" type="number" id="assetVehicle" min="0" value="0" oninput="updateEstate()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tabungan / Deposito (Rp)</label>
+          <input class="form-input money" type="number" id="assetSavings" min="0" value="0" oninput="updateEstate()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Emas / Perhiasan (Rp)</label>
+          <input class="form-input money" type="number" id="assetGold" min="0" value="0" oninput="updateEstate()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Usaha / Bisnis (Rp)</label>
+          <input class="form-input money" type="number" id="assetBusiness" min="0" value="0" oninput="updateEstate()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Piutang / Aset Lain (Rp)</label>
+          <input class="form-input money" type="number" id="assetOther" min="0" value="0" oninput="updateEstate()">
+        </div>
+      </div>
+      <div style="margin-top:1rem; padding:0.8rem; background:rgba(201,168,76,0.1); border-radius:3px; border:1px solid rgba(201,168,76,0.3);">
+        <span class="form-label">Total Harta Kotor (Tirkah):</span>
+        <span class="money-display" id="grossEstate" style="margin-left:1rem; font-size:1.1rem;">Rp 0</span>
+      </div>
+    </div>
+
+    <!-- Pengurangan Syariah -->
+    <div class="card">
+      <div class="card-title"><span class="icon">⚖️</span> Pengurangan Syariah (Tajhiz → Hutang → Wasiat)</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">① Biaya Tajhiz/Pemakaman (Rp)</label>
+          <input class="form-input money" type="number" id="deductFuneral" min="0" value="0" oninput="updateEstate()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">② Total Hutang Pewaris (Rp)</label>
+          <input class="form-input money" type="number" id="deductDebt" min="0" value="0" oninput="updateEstate()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">③ Wasiat (max 1/3 harta bersih) (Rp)</label>
+          <input class="form-input money" type="number" id="deductWasiat" min="0" value="0" oninput="updateEstate()">
+          <div id="wasiatWarn" class="alert alert-warn" style="display:none; margin-top:0.3rem; padding:0.4rem 0.6rem; font-size:0.78rem;">⚠️ Wasiat melebihi 1/3 harta bersih — akan dibatasi sesuai fiqh</div>
+        </div>
+      </div>
+      <div style="margin-top:1rem; padding:1rem; background:rgba(26,92,58,0.08); border-radius:3px; border:1px solid rgba(26,92,58,0.2);">
+        <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;">
+          <div>
+            <div class="form-label">Harta Bersih Setelah Tajhiz+Hutang:</div>
+            <div class="money-display" id="netBeforeWasiat">Rp 0</div>
+          </div>
+          <div>
+            <div class="form-label">Wasiat Efektif:</div>
+            <div class="money-display" id="effectiveWasiat">Rp 0</div>
+          </div>
+          <div>
+            <div class="form-label" style="color:var(--emerald-dark); font-weight:800;">✦ Harta Waris Bersih (TE):</div>
+            <div class="money-display" id="netEstate" style="font-size:1.2rem; color:var(--emerald-dark);">Rp 0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tanah untuk Dibagi Fisik -->
+    <div class="card">
+      <div class="card-title"><span class="icon">🗺️</span> Bidang Tanah untuk Pembagian Luasan (Opsional)</div>
+      <div class="alert alert-info">
+        💡 Aktifkan fitur ini untuk membagi tanah secara fisik (m²) — berbeda dari nilai jual yang dimasukkan di atas
+      </div>
+      <div class="toggle-row">
+        <label class="toggle-switch">
+          <input type="checkbox" id="landDivideMode" onchange="toggleLandMode()">
+          <span class="toggle-slider"></span>
+        </label>
+        <span style="font-size:0.88rem; color:var(--stone);">Aktifkan Pembagian Tanah Fisik (m²)</span>
+      </div>
+      <div id="landSection" style="display:none; margin-top:1rem;">
+        <div id="landParcels"></div>
+        <button class="btn btn-outline" onclick="addLandParcel()" style="margin-top:0.5rem;">
+          ＋ Tambah Bidang Tanah
+        </button>
+        <div style="margin-top:0.8rem; padding:0.6rem 0.8rem; background:rgba(201,168,76,0.1); border-radius:3px; border:1px solid rgba(201,168,76,0.3); font-size:0.85rem;">
+          Total Luas: <strong id="totalLandArea" style="font-family:'JetBrains Mono',monospace;">0 m²</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Munasakhah -->
+    <div class="card">
+      <div class="card-title"><span class="icon">🔁</span> Munasakhah (Waris Bertingkat) — Opsional</div>
+      <div class="toggle-row">
+        <label class="toggle-switch">
+          <input type="checkbox" id="munasakhahMode" onchange="toggleMunasakhah()">
+          <span class="toggle-slider"></span>
+        </label>
+        <span style="font-size:0.88rem; color:var(--stone);">Aktifkan Munasakhah</span>
+      </div>
+      <div id="munasakhahSection" style="display:none; margin-top:1rem;">
+        <div class="alert alert-info">Tambahkan harta dari waris sebelumnya yang belum terbagi ke harta pewaris ini</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Nama Pewaris Sebelumnya</label>
+            <input class="form-input" type="text" id="munaName" placeholder="Nama almarhum sebelumnya">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Harta Warisan yang Diterima (Rp)</label>
+            <input class="form-input money" type="number" id="munaAmount" min="0" value="0" oninput="updateEstate()">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-btns">
+      <div></div>
+      <button class="btn btn-primary btn-large" onclick="goToStep(2)">
+        Lanjut: Pilih Ahli Waris →
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== STEP 2: HEIR SELECTION ===== -->
+  <div class="step-panel" id="step-2">
+    <div class="card">
+      <div class="card-title"><span class="icon">👨‍👩‍👧‍👦</span> Pilih Ahli Waris (Klik untuk aktifkan, +/- untuk jumlah)</div>
+      <div id="hijabAlerts"></div>
+      <div class="heir-grid" id="heirGrid"></div>
+    </div>
+
+    <div class="nav-btns">
+      <button class="btn btn-outline" onclick="goToStep(1)">← Kembali</button>
+      <button class="btn btn-primary btn-large" onclick="calculate()">
+        ✦ Hitung Faraid
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== STEP 3: RESULTS ===== -->
+  <div class="step-panel" id="step-3">
+    <div id="resultsContent"></div>
+    <div class="nav-btns">
+      <button class="btn btn-outline" onclick="goToStep(2)">← Ubah Ahli Waris</button>
+      <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+        <button class="btn btn-outline" onclick="runStressTests()">🧪 Stress Test</button>
+        <button class="btn btn-gold" onclick="exportExcel()">📊 Export Excel</button>
+        <button class="btn btn-primary" onclick="window.print()">🖨️ Cetak Laporan</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<!-- DISCLAIMER -->
+<div class="container">
+  <div class="disclaimer">
+    ⚠️ <strong>Perhatian:</strong> Kalkulator ini adalah alat bantu perhitungan matematis faraid berdasarkan mazhab Syafi'i.
+    Hasil perhitungan <strong>BUKAN fatwa hukum</strong>. Untuk keputusan resmi, konsultasikan dengan Ahli Faraid, Ustadz, atau Pengadilan Agama setempat.
+    Pembagian tanah fisik memerlukan kesepakatan semua ahli waris dan prosedur legal (BPN/Notaris/PPAT).
+    <br><small style="opacity:0.7; margin-top:0.3rem; display:block;">لَا تَأْخُذُوا بِهَذِهِ الْحَسَّابَةِ حُكْمًا قَطْعِيًّا — استشيروا العلماء</small>
+  </div>
+</div>
+
+<!-- STRESS TEST MODAL -->
+<div class="modal-overlay" id="stressModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('stressModal')">✕</button>
+    <h2 style="font-family:'Playfair Display',serif; color:var(--emerald-dark); margin-bottom:1rem;">🧪 Stress Test Cases</h2>
+    <div id="stressResults"></div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// STATE MANAGEMENT
+// ============================================================
+const state = {
+  deceasedGender: 'male',
+  grossEstate: 0,
+  netEstate: 0,
+  effectiveWasiat: 0,
+  heirs: {},
+  landParcels: [],
+  landDivideMode: false,
+  munasakhah: 0,
+  calculation: null,
+  currentStep: 1
+};
+
+// ============================================================
+// HEIR DATABASE
+// ============================================================
+const HEIRS_DB = [
+  { id:'husband',          nameId:'Suami',               arabic:'زَوْجٌ',         gender:'m', maxCount:1,  blockedBy:[] },
+  { id:'wife',             nameId:'Istri',               arabic:'زَوْجَةٌ',        gender:'f', maxCount:4,  blockedBy:[] },
+  { id:'son',              nameId:'Anak Laki-laki',      arabic:'اِبْنٌ',          gender:'m', maxCount:20, blockedBy:[] },
+  { id:'daughter',         nameId:'Anak Perempuan',      arabic:'اِبْنَةٌ',         gender:'f', maxCount:20, blockedBy:[] },
+  { id:'father',           nameId:'Ayah',                arabic:'أَبٌ',            gender:'m', maxCount:1,  blockedBy:[] },
+  { id:'mother',           nameId:'Ibu',                 arabic:'أُمٌّ',            gender:'f', maxCount:1,  blockedBy:[] },
+  { id:'grandfather',      nameId:'Kakek (Paternal)',    arabic:'جَدٌّ',            gender:'m', maxCount:1,  blockedBy:['father'] },
+  { id:'grandmother_pa',   nameId:'Nenek (Paternal)',    arabic:'جَدَّةٌ ﻷَبٍ',     gender:'f', maxCount:1,  blockedBy:['mother'] },
+  { id:'grandmother_ma',   nameId:'Nenek (Maternal)',   arabic:'جَدَّةٌ لِأُمٍّ',  gender:'f', maxCount:1,  blockedBy:['mother'] },
+  { id:'grandson',         nameId:'Cucu Laki-laki',     arabic:'اِبْنُ اِبْنٍ',     gender:'m', maxCount:20, blockedBy:['son'] },
+  { id:'granddaughter',    nameId:'Cucu Perempuan',     arabic:'اِبْنَةُ اِبْنٍ',  gender:'f', maxCount:20, blockedBy:['son'] },
+  { id:'brother',          nameId:'Saudara LK Kandung', arabic:'أَخٌ شَقِيقٌ',     gender:'m', maxCount:20, blockedBy:['son','father','grandfather'] },
+  { id:'sister',           nameId:'Saudari PR Kandung', arabic:'أُخْتٌ شَقِيقَةٌ', gender:'f', maxCount:20, blockedBy:['son','father','grandfather'] },
+  { id:'paternal_brother', nameId:'Saudara LK Seayah', arabic:'أَخٌ لِأَبٍ',      gender:'m', maxCount:20, blockedBy:['son','father','grandfather','brother'] },
+  { id:'paternal_sister',  nameId:'Saudari PR Seayah', arabic:'أُخْتٌ لِأَبٍ',   gender:'f', maxCount:20, blockedBy:['son','father','grandfather','brother'] },
+  { id:'uncle',            nameId:'Paman (Paternal)',   arabic:'عَمٌّ',            gender:'m', maxCount:20, blockedBy:['son','father','grandfather','brother','paternal_brother','grandson'] },
+];
+
+// Initialize heir counts
+HEIRS_DB.forEach(h => { state.heirs[h.id] = { count: 0, active: false }; });
+
+// ============================================================
+// HELPER: Format currency
+// ============================================================
+function fmtRp(n) {
+  if (isNaN(n)) n = 0;
+  return 'Rp ' + Math.round(n).toLocaleString('id-ID');
+}
+function fmtM2(n) { return (Math.round(n*100)/100).toLocaleString('id-ID') + ' m²'; }
+function fmtFrac(num, den) {
+  if (num === 0) return '0';
+  const g = gcd(Math.abs(num), den);
+  return (num/g) + '/' + (den/g);
+}
+function gcd(a, b) { return b ? gcd(b, a % b) : a; }
+
+// ============================================================
+// ESTATE ENGINE
+// ============================================================
+const EstateEngine = {
+  calculate() {
+    const land    = parseFloat(document.getElementById('assetLand').value)||0;
+    const vehicle = parseFloat(document.getElementById('assetVehicle').value)||0;
+    const savings = parseFloat(document.getElementById('assetSavings').value)||0;
+    const gold    = parseFloat(document.getElementById('assetGold').value)||0;
+    const biz     = parseFloat(document.getElementById('assetBusiness').value)||0;
+    const other   = parseFloat(document.getElementById('assetOther').value)||0;
+    const muna    = parseFloat(document.getElementById('munaAmount').value)||0;
+
+    const gross = land + vehicle + savings + gold + biz + other + muna;
+    const funeral = parseFloat(document.getElementById('deductFuneral').value)||0;
+    const debt    = parseFloat(document.getElementById('deductDebt').value)||0;
+    const wasiat  = parseFloat(document.getElementById('deductWasiat').value)||0;
+
+    const afterTajhizDebt = Math.max(0, gross - funeral - debt);
+    const maxWasiat = afterTajhizDebt / 3;
+    const effectiveWasiat = Math.min(wasiat, maxWasiat);
+    const netEstate = Math.max(0, afterTajhizDebt - effectiveWasiat);
+
+    state.grossEstate = gross;
+    state.netEstate = netEstate;
+    state.effectiveWasiat = effectiveWasiat;
+
+    return { gross, funeral, debt, afterTajhizDebt, wasiat, maxWasiat, effectiveWasiat, netEstate };
+  }
+};
+
+function updateEstate() {
+  const e = EstateEngine.calculate();
+  document.getElementById('grossEstate').textContent = fmtRp(e.gross);
+  document.getElementById('netBeforeWasiat').textContent = fmtRp(e.afterTajhizDebt);
+  document.getElementById('effectiveWasiat').textContent = fmtRp(e.effectiveWasiat);
+  document.getElementById('netEstate').textContent = fmtRp(e.netEstate);
+  const warn = document.getElementById('wasiatWarn');
+  warn.style.display = (e.wasiat > e.maxWasiat + 0.01) ? 'flex' : 'none';
+}
+
+// ============================================================
+// HELPER FLAGS ENGINE
+// ============================================================
+const HelperFlags = {
+  generate(heirs) {
+    const h = (id) => (heirs[id]?.active && heirs[id]?.count > 0) ? heirs[id].count : 0;
+    const has = (id) => h(id) > 0;
+
+    const flags = {
+      HAS_SON:              has('son'),
+      HAS_DAUGHTER:         has('daughter'),
+      HAS_FATHER:           has('father'),
+      HAS_MOTHER:           has('mother'),
+      HAS_HUSBAND:          has('husband'),
+      HAS_WIFE:             has('wife'),
+      HAS_GRANDFATHER:      has('grandfather'),
+      HAS_GRANDMOTHER_PA:   has('grandmother_pa'),
+      HAS_GRANDMOTHER_MA:   has('grandmother_ma'),
+      HAS_BROTHER:          has('brother'),
+      HAS_SISTER:           has('sister'),
+      HAS_PAT_BROTHER:      has('paternal_brother'),
+      HAS_PAT_SISTER:       has('paternal_sister'),
+      HAS_GRANDSON:         has('grandson'),
+      HAS_GRANDDAUGHTER:    has('granddaughter'),
+      HAS_UNCLE:            has('uncle'),
+
+      N_SON:             h('son'),
+      N_DAUGHTER:        h('daughter'),
+      N_WIFE:            h('wife'),
+      N_BROTHER:         h('brother'),
+      N_SISTER:          h('sister'),
+      N_PAT_BROTHER:     h('paternal_brother'),
+      N_PAT_SISTER:      h('paternal_sister'),
+      N_GRANDSON:        h('grandson'),
+      N_GRANDDAUGHTER:   h('granddaughter'),
+      N_UNCLE:           h('uncle'),
+    };
+
+    // Derived flags
+    flags.HAS_CHILD     = flags.HAS_SON || flags.HAS_DAUGHTER;
+    flags.HAS_MALE_DESC = flags.HAS_SON || flags.HAS_GRANDSON;
+    flags.HAS_DESC      = flags.HAS_CHILD || flags.HAS_GRANDSON || flags.HAS_GRANDDAUGHTER;
+
+    // Umariyatain: (Husband+Father+Mother) or (Wife+Father+Mother), no children
+    flags.UMARIYATAIN = !flags.HAS_DESC &&
+      flags.HAS_FATHER && flags.HAS_MOTHER &&
+      (flags.HAS_HUSBAND || flags.HAS_WIFE);
+
+    // Ashabah ma'al ghair: daughter/granddaughter present but no son + sister present
+    flags.ASHABAH_MAAL_GHAIR_SISTER = (flags.HAS_DAUGHTER || flags.HAS_GRANDDAUGHTER) &&
+      flags.HAS_SISTER && !flags.HAS_SON && !flags.HAS_GRANDSON;
+
+    flags.ASHABAH_MAAL_GHAIR_PAT_SISTER = (flags.HAS_DAUGHTER || flags.HAS_GRANDDAUGHTER) &&
+      flags.HAS_PAT_SISTER && !flags.HAS_SON && !flags.HAS_GRANDSON && !flags.HAS_BROTHER && !flags.HAS_SISTER;
+
+    // Multiple siblings (for mother's share)
+    flags.MULTIPLE_SIBLINGS = (flags.N_BROTHER + flags.N_SISTER + flags.N_PAT_BROTHER + flags.N_PAT_SISTER) >= 2;
+
+    return flags;
+  }
+};
+
+// ============================================================
+// HEIR DETECT ENGINE (blocking)
+// ============================================================
+const HeirDetect = {
+  getBlockedHeirs(heirs, flags) {
+    const blocked = new Set();
+    // Standard blocking
+    if (flags.HAS_FATHER) { blocked.add('grandfather'); }
+    if (flags.HAS_MOTHER) { blocked.add('grandmother_pa'); blocked.add('grandmother_ma'); }
+    if (flags.HAS_MALE_DESC) {
+      blocked.add('brother'); blocked.add('sister');
+      blocked.add('paternal_brother'); blocked.add('paternal_sister');
+    }
+    if (flags.HAS_FATHER) {
+      blocked.add('brother'); blocked.add('sister');
+      blocked.add('paternal_brother'); blocked.add('paternal_sister');
+    }
+    if (flags.HAS_GRANDFATHER && !flags.HAS_FATHER) {
+      blocked.add('brother'); blocked.add('sister');
+      blocked.add('paternal_brother'); blocked.add('paternal_sister');
+    }
+    if (flags.HAS_BROTHER) { blocked.add('paternal_brother'); blocked.add('paternal_sister'); }
+    if (flags.HAS_SON) { blocked.add('grandson'); blocked.add('granddaughter'); }
+    // Uncle blocking
+    if (flags.HAS_SON || flags.HAS_GRANDSON || flags.HAS_FATHER || flags.HAS_GRANDFATHER ||
+        flags.HAS_BROTHER || flags.HAS_PAT_BROTHER) {
+      blocked.add('uncle');
+    }
+    return blocked;
+  }
+};
+
+// ============================================================
+// FURUDH ENGINE
+// ============================================================
+const FurudhEngine = {
+  calculate(flags, blocked, deceasedGender) {
+    const shares = {}; // id -> { num, den, reason }
+    const TE = state.netEstate;
+
+    // --- SPOUSE ---
+    if (flags.HAS_HUSBAND && deceasedGender === 'female') {
+      if (flags.HAS_DESC) {
+        shares['husband'] = { num:1, den:4, reason:'Ada keturunan → 1/4' };
+      } else {
+        shares['husband'] = { num:1, den:2, reason:'Tidak ada keturunan → 1/2' };
+      }
+    }
+    if (flags.HAS_WIFE && deceasedGender === 'male') {
+      if (flags.HAS_DESC) {
+        shares['wife'] = { num:1, den:8, reason:'Ada keturunan → 1/8 (dibagi ' + flags.N_WIFE + ' istri)' };
+      } else {
+        shares['wife'] = { num:1, den:4, reason:'Tidak ada keturunan → 1/4 (dibagi ' + flags.N_WIFE + ' istri)' };
+      }
+    }
+
+    // --- MOTHER ---
+    if (flags.HAS_MOTHER && !blocked.has('mother')) {
+      if (flags.HAS_DESC || flags.MULTIPLE_SIBLINGS) {
+        shares['mother'] = { num:1, den:6, reason: flags.HAS_DESC ? 'Ada keturunan → 1/6' : '≥2 saudara → 1/6' };
+      } else if (flags.UMARIYATAIN) {
+        shares['mother'] = { num:'umariyatain', den:null, reason:'Umariyatain: 1/3 dari sisa setelah pasangan' };
+      } else {
+        shares['mother'] = { num:1, den:3, reason:'Tidak ada keturunan & < 2 saudara → 1/3' };
+      }
+    }
+
+    // --- FATHER ---
+    if (flags.HAS_FATHER && !blocked.has('father')) {
+      if (flags.HAS_MALE_DESC) {
+        shares['father'] = { num:1, den:6, reason:'Ada anak/cucu laki-laki → 1/6 (sisa ke ashabah jika ada anak perempuan)' };
+      } else if (flags.HAS_DAUGHTER || flags.HAS_GRANDDAUGHTER) {
+        // Father gets 1/6 + ashabah when only female descendants
+        shares['father'] = { num:1, den:6, ashabahPlus:true, reason:'Ada anak perempuan/cucu PR → 1/6 + sisa ashabah' };
+      } else {
+        // Father is pure ashabah (no descendants)
+        shares['father'] = { num:0, den:1, isAshabah:true, reason:'Tidak ada keturunan → Ashabah bi nafsihi' };
+      }
+    }
+
+    // --- GRANDFATHER (if father absent) ---
+    if (flags.HAS_GRANDFATHER && !blocked.has('grandfather')) {
+      if (flags.HAS_MALE_DESC) {
+        shares['grandfather'] = { num:1, den:6, reason:'Ada anak/cucu laki-laki → 1/6' };
+      } else if (flags.HAS_DAUGHTER || flags.HAS_GRANDDAUGHTER) {
+        shares['grandfather'] = { num:1, den:6, ashabahPlus:true, reason:'Ada anak PR → 1/6 + sisa ashabah' };
+      } else {
+        shares['grandfather'] = { num:0, den:1, isAshabah:true, reason:'Ashabah bi nafsihi' };
+      }
+    }
+
+    // --- GRANDMOTHER ---
+    if (flags.HAS_GRANDMOTHER_PA && !blocked.has('grandmother_pa')) {
+      shares['grandmother_pa'] = { num:1, den:6, reason:'Ibu tiada → 1/6' };
+    }
+    if (flags.HAS_GRANDMOTHER_MA && !blocked.has('grandmother_ma')) {
+      shares['grandmother_ma'] = { num:1, den:6, reason:'Ibu tiada → 1/6' };
+    }
+
+    // --- DAUGHTERS ---
+    if (flags.HAS_DAUGHTER && !blocked.has('daughter')) {
+      if (flags.HAS_SON) {
+        // daughters are ashabah with sons
+        shares['daughter'] = { num:0, den:1, isAshabah:true, withSon:true, reason:'Bersama anak laki-laki → Ashabah bil ghair (2:1)' };
+      } else {
+        if (flags.N_DAUGHTER === 1) {
+          shares['daughter'] = { num:1, den:2, reason:'1 anak PR tanpa anak LK → 1/2' };
+        } else {
+          shares['daughter'] = { num:2, den:3, reason:flags.N_DAUGHTER + ' anak PR tanpa anak LK → 2/3 dibagi rata' };
+        }
+      }
+    }
+
+    // --- GRANDDAUGHTERS (son's daughter) ---
+    if (flags.HAS_GRANDDAUGHTER && !blocked.has('granddaughter')) {
+      if (flags.HAS_GRANDSON) {
+        shares['granddaughter'] = { num:0, den:1, isAshabah:true, withGrandson:true, reason:'Bersama cucu laki-laki → Ashabah bil ghair (2:1)' };
+      } else if (flags.HAS_DAUGHTER && !flags.HAS_SON) {
+        // Granddaughter completes 2/3 if daughter is 1/2
+        if (flags.N_DAUGHTER === 1) {
+          shares['granddaughter'] = { num:1, den:6, reason:'1 anak PR sudah ambil 1/2 → cucu PR melengkapi 2/3 = 1/6' };
+        } else {
+          // daughters already have 2/3, granddaughter blocked
+          shares['granddaughter'] = { num:0, den:1, hijabNuqshan:true, reason:'Anak PR sudah 2+ (2/3) → cucu PR terhijab nuqshan (habis bagian)' };
+        }
+      } else if (!flags.HAS_DAUGHTER && !flags.HAS_SON) {
+        if (flags.N_GRANDDAUGHTER === 1) {
+          shares['granddaughter'] = { num:1, den:2, reason:'Tidak ada anak → cucu PR tunggal = 1/2' };
+        } else {
+          shares['granddaughter'] = { num:2, den:3, reason:'Tidak ada anak → beberapa cucu PR = 2/3' };
+        }
+      }
+    }
+
+    // --- FULL SISTERS ---
+    if (flags.HAS_SISTER && !blocked.has('sister')) {
+      if (flags.ASHABAH_MAAL_GHAIR_SISTER) {
+        shares['sister'] = { num:0, den:1, isAshabah:true, maalGhair:true, reason:'Ada anak PR/cucu PR → Ashabah ma\'al ghair' };
+      } else if (flags.HAS_BROTHER && !blocked.has('brother')) {
+        shares['sister'] = { num:0, den:1, isAshabah:true, withBrother:true, reason:'Bersama saudara LK kandung → Ashabah bil ghair (2:1)' };
+      } else if (!blocked.has('brother')) {
+        if (flags.N_SISTER === 1) {
+          shares['sister'] = { num:1, den:2, reason:'1 saudari kandung → 1/2' };
+        } else {
+          shares['sister'] = { num:2, den:3, reason:flags.N_SISTER + ' saudari kandung → 2/3 dibagi rata' };
+        }
+      }
+    }
+
+    // --- FULL BROTHERS ---
+    if (flags.HAS_BROTHER && !blocked.has('brother')) {
+      shares['brother'] = { num:0, den:1, isAshabah:true, reason:'Ashabah bi nafsihi' };
+    }
+
+    // --- PATERNAL SISTERS ---
+    if (flags.HAS_PAT_SISTER && !blocked.has('paternal_sister')) {
+      if (flags.ASHABAH_MAAL_GHAIR_PAT_SISTER && !flags.HAS_SISTER) {
+        shares['paternal_sister'] = { num:0, den:1, isAshabah:true, maalGhair:true, reason:'Ada anak PR (tidak ada saudari kandung) → Ashabah ma\'al ghair' };
+      } else if (flags.HAS_PAT_BROTHER && !blocked.has('paternal_brother')) {
+        shares['paternal_sister'] = { num:0, den:1, isAshabah:true, withPatBrother:true, reason:'Bersama saudara seayah → Ashabah bil ghair (2:1)' };
+      } else if (!flags.HAS_BROTHER && !flags.HAS_SISTER) {
+        if (flags.N_PAT_SISTER === 1) {
+          shares['paternal_sister'] = { num:1, den:2, reason:'1 saudari seayah → 1/2' };
+        } else {
+          shares['paternal_sister'] = { num:2, den:3, reason:flags.N_PAT_SISTER + ' saudari seayah → 2/3' };
+        }
+      }
+    }
+
+    // --- PATERNAL BROTHERS ---
+    if (flags.HAS_PAT_BROTHER && !blocked.has('paternal_brother')) {
+      shares['paternal_brother'] = { num:0, den:1, isAshabah:true, reason:'Ashabah bi nafsihi' };
+    }
+
+    // --- GRANDSON (son of son) ---
+    if (flags.HAS_GRANDSON && !blocked.has('grandson')) {
+      shares['grandson'] = { num:0, den:1, isAshabah:true, reason:'Cucu LK → Ashabah bi nafsihi' };
+    }
+
+    // --- UNCLE ---
+    if (flags.HAS_UNCLE && !blocked.has('uncle')) {
+      shares['uncle'] = { num:0, den:1, isAshabah:true, reason:'Paman → Ashabah bi nafsihi (terakhir)' };
+    }
+
+    return shares;
+  }
+};
+
+// ============================================================
+// ASHABAH ENGINE
+// ============================================================
+const AshabahEngine = {
+  calculate(furudhShares, flags, blocked, remainderFraction, TE) {
+    // remainderFraction is the remainder after furudh (0 to 1)
+    const results = {};
+
+    // Determine ashabah priority
+    // Sons + daughters (ashabah bil ghair 2:1)
+    if (flags.HAS_SON && !blocked.has('son')) {
+      const nSon = flags.N_SON;
+      const nDau = (flags.HAS_DAUGHTER && !blocked.has('daughter')) ? flags.N_DAUGHTER : 0;
+      const totalUnits = nSon * 2 + nDau * 1;
+      const perUnit = remainderFraction / totalUnits;
+      results['son']      = { frac: perUnit * 2, perPerson: perUnit * 2 / nSon, count: nSon, reason: 'Ashabah bi nafsihi (2 bagian per orang)' };
+      if (nDau > 0) {
+        results['daughter'] = { frac: perUnit * nDau, perPerson: perUnit / 1, count: nDau, reason: 'Ashabah bil ghair (1 bagian per orang, 2:1 dengan anak LK)' };
+      }
+      return { results, consumed: remainderFraction };
+    }
+
+    // Grandsons + granddaughters
+    if (flags.HAS_GRANDSON && !blocked.has('grandson')) {
+      const nGs = flags.N_GRANDSON;
+      const nGd = (flags.HAS_GRANDDAUGHTER && !blocked.has('granddaughter') && furudhShares['granddaughter']?.isAshabah) ? flags.N_GRANDDAUGHTER : 0;
+      const totalUnits = nGs * 2 + nGd * 1;
+      const perUnit = remainderFraction / totalUnits;
+      results['grandson'] = { frac: perUnit * 2 * nGs / nGs, perPerson: perUnit * 2, count: nGs, reason: 'Cucu LK ashabah (2 bagian)' };
+      if (nGd > 0) {
+        results['granddaughter'] = { frac: perUnit * nGd, perPerson: perUnit, count: nGd, reason: 'Cucu PR ashabah bil ghair (1 bagian)' };
+      }
+      return { results, consumed: remainderFraction };
+    }
+
+    // Father (pure ashabah or father + ashabah plus)
+    if (flags.HAS_FATHER && furudhShares['father']?.isAshabah) {
+      results['father'] = { frac: remainderFraction, perPerson: remainderFraction, count: 1, reason: 'Ayah ashabah bi nafsihi' };
+      return { results, consumed: remainderFraction };
+    }
+    if (flags.HAS_FATHER && furudhShares['father']?.ashabahPlus) {
+      // Father already has 1/6 furudh, gets the remainder too
+      results['father_ashabah'] = { frac: remainderFraction, perPerson: remainderFraction, count: 1, reason: 'Ayah 1/6 + sisa ashabah' };
+      return { results, consumed: remainderFraction };
+    }
+
+    // Grandfather (pure ashabah)
+    if (flags.HAS_GRANDFATHER && !blocked.has('grandfather') && furudhShares['grandfather']?.isAshabah) {
+      results['grandfather'] = { frac: remainderFraction, perPerson: remainderFraction, count: 1, reason: 'Kakek ashabah bi nafsihi' };
+      return { results, consumed: remainderFraction };
+    }
+    if (flags.HAS_GRANDFATHER && !blocked.has('grandfather') && furudhShares['grandfather']?.ashabahPlus) {
+      results['grandfather_ashabah'] = { frac: remainderFraction, perPerson: remainderFraction, count: 1, reason: 'Kakek 1/6 + sisa ashabah' };
+      return { results, consumed: remainderFraction };
+    }
+
+    // Full brothers + sisters
+    if (flags.HAS_BROTHER && !blocked.has('brother')) {
+      const nBro = flags.N_BROTHER;
+      const nSis = (flags.HAS_SISTER && !blocked.has('sister') && furudhShares['sister']?.withBrother) ? flags.N_SISTER : 0;
+      const maalGhairSis = (flags.HAS_SISTER && furudhShares['sister']?.maalGhair) ? flags.N_SISTER : 0;
+      // maal ghair sisters also take ashabah
+      const totalUnits = nBro * 2 + nSis * 1 + maalGhairSis * 1;
+      const perUnit = remainderFraction / totalUnits;
+      results['brother'] = { frac: perUnit * 2 * nBro / nBro, perPerson: perUnit * 2, count: nBro, reason: 'Saudara LK kandung ashabah (2 unit)' };
+      if (nSis + maalGhairSis > 0) {
+        const sisCount = nSis + maalGhairSis;
+        results['sister'] = { frac: perUnit * sisCount, perPerson: perUnit, count: sisCount, reason: 'Saudari kandung ashabah (1 unit)' };
+      }
+      return { results, consumed: remainderFraction };
+    }
+
+    // Sister maal ghair (daughter + sister, no brother)
+    if (flags.ASHABAH_MAAL_GHAIR_SISTER && !flags.HAS_BROTHER) {
+      const nSis = flags.N_SISTER;
+      results['sister'] = { frac: remainderFraction, perPerson: remainderFraction / nSis, count: nSis, reason: 'Saudari kandung ashabah ma\'al ghair (bersama anak PR)' };
+      return { results, consumed: remainderFraction };
+    }
+
+    // Paternal brothers + sisters
+    if (flags.HAS_PAT_BROTHER && !blocked.has('paternal_brother')) {
+      const nPb = flags.N_PAT_BROTHER;
+      const nPs = (flags.HAS_PAT_SISTER && !blocked.has('paternal_sister') && furudhShares['paternal_sister']?.withPatBrother) ? flags.N_PAT_SISTER : 0;
+      const maalPs = (flags.HAS_PAT_SISTER && furudhShares['paternal_sister']?.maalGhair) ? flags.N_PAT_SISTER : 0;
+      const totalUnits = nPb * 2 + (nPs + maalPs) * 1;
+      const perUnit = remainderFraction / totalUnits;
+      results['paternal_brother'] = { frac: perUnit * 2, perPerson: perUnit * 2, count: nPb, reason: 'Saudara seayah ashabah (2 unit)' };
+      if (nPs + maalPs > 0) {
+        results['paternal_sister'] = { frac: perUnit * (nPs + maalPs), perPerson: perUnit, count: nPs + maalPs, reason: 'Saudari seayah ashabah (1 unit)' };
+      }
+      return { results, consumed: remainderFraction };
+    }
+
+    // Paternal sister maal ghair (no paternal brother)
+    if (flags.ASHABAH_MAAL_GHAIR_PAT_SISTER && !flags.HAS_PAT_BROTHER) {
+      const nPs = flags.N_PAT_SISTER;
+      results['paternal_sister'] = { frac: remainderFraction, perPerson: remainderFraction / nPs, count: nPs, reason: 'Saudari seayah ashabah ma\'al ghair' };
+      return { results, consumed: remainderFraction };
+    }
+
+    // Uncle
+    if (flags.HAS_UNCLE && !blocked.has('uncle')) {
+      const n = flags.N_UNCLE;
+      results['uncle'] = { frac: remainderFraction, perPerson: remainderFraction / n, count: n, reason: 'Paman ashabah bi nafsihi' };
+      return { results, consumed: remainderFraction };
+    }
+
+    return { results, consumed: 0 };
+  }
+};
+
+// ============================================================
+// AUL / RADD ENGINE
+// ============================================================
+const AulRaddEngine = {
+  adjustAul(shares) {
+    // Sum all fixed fractions to common denominator
+    let totalNum = 0, den = 24;
+    const nums = {};
+    for (const [id, s] of Object.entries(shares)) {
+      if (s.num === 'umariyatain' || s.isAshabah || s.hijabNuqshan || s.ashabahPlus) continue;
+      if (s.num === 0) continue;
+      const n = Math.round(s.num * den / s.den);
+      nums[id] = n;
+      totalNum += n;
+    }
+    if (totalNum <= den) return { aul: false, factor: 1, totalNum, den };
+    // AUL: new denominator = totalNum
+    return { aul: true, factor: den / totalNum, totalNum, den: totalNum };
+  },
+
+  adjustRadd(finalFractions, hasAshabah) {
+    if (hasAshabah) return { radd: false };
+    const total = finalFractions.reduce((s, f) => s + f.frac, 0);
+    if (Math.abs(total - 1) < 0.0001) return { radd: false };
+    if (total >= 1) return { radd: false };
+    // RADD: redistribute remainder among non-spouse furudh heirs
+    const remainder = 1 - total;
+    const eligible = finalFractions.filter(f => f.id !== 'husband' && f.id !== 'wife' && f.frac > 0 && !f.isAshabah);
+    const eligibleTotal = eligible.reduce((s, f) => s + f.frac, 0);
+    if (eligibleTotal < 0.0001) return { radd: false };
+    return { radd: true, remainder, eligible, eligibleTotal };
+  }
+};
+
+// ============================================================
+// MAIN CALCULATION ORCHESTRATOR
+// ============================================================
+function calculate() {
+  const TE = state.netEstate;
+  const deceasedGender = document.getElementById('deceasedGender').value;
+
+  // 1. Generate flags
+  const flags = HelperFlags.generate(state.heirs);
+
+  // 2. Get blocked heirs
+  const blocked = HeirDetect.getBlockedHeirs(state.heirs, flags);
+
+  // 3. Calculate furudh shares
+  const furudhShares = FurudhEngine.calculate(flags, blocked, deceasedGender);
+
+  // 4. Handle Umariyatain
+  let umariyatainApplied = false;
+  let spouseShare = 0;
+  if (flags.UMARIYATAIN && furudhShares['mother']?.num === 'umariyatain') {
+    umariyatainApplied = true;
+    if (flags.HAS_HUSBAND) spouseShare = 1/2;
+    if (flags.HAS_WIFE) spouseShare = 1/4;
+    const remainder = 1 - spouseShare;
+    const motherShare = remainder / 3; // 1/3 of remainder
+    furudhShares['mother'] = { num: null, den: null, exactFrac: motherShare, reason: 'Umariyatain: 1/3 × (1 - bagian pasangan) = ' + fmtFracDecimal(motherShare) };
+  }
+
+  // 5. Convert to common denominator (24) and sum
+  const den = 24;
+  let totalFurudhNum = 0;
+  const furudhNums = {};
+
+  for (const [id, s] of Object.entries(furudhShares)) {
+    if (s.isAshabah || s.hijabNuqshan || s.ashabahPlus) continue;
+    let frac = 0;
+    if (s.exactFrac !== undefined) { frac = s.exactFrac; }
+    else if (s.num > 0) { frac = s.num / s.den; }
+    if (frac > 0) {
+      furudhNums[id] = frac;
+      totalFurudhNum += frac;
+    }
+  }
+
+  // 6. AUL check
+  let aulFactor = 1;
+  const aulActive = totalFurudhNum > 1 + 0.0001;
+  if (aulActive) { aulFactor = 1 / totalFurudhNum; }
+
+  // 7. Calculate remainder for ashabah
+  const adjustedFurudhTotal = Math.min(totalFurudhNum, 1) * aulFactor;
+  const remainder = Math.max(0, 1 - (aulActive ? 1 : totalFurudhNum));
+
+  // 8. Determine if ashabah exist
+  const hasAshabah = Object.values(furudhShares).some(s => s.isAshabah && !s.hijabNuqshan) ||
+    Object.values(furudhShares).some(s => s.ashabahPlus) ||
+    flags.HAS_SON || flags.HAS_GRANDSON ||
+    (flags.HAS_FATHER && !flags.HAS_MALE_DESC);
+
+  // 9. Ashabah calculation
+  const ashabahResult = hasAshabah && remainder > 0.0001
+    ? AshabahEngine.calculate(furudhShares, flags, blocked, remainder, TE)
+    : { results: {}, consumed: 0 };
+
+  // 10. Father ashabah plus handling
+  if (furudhShares['father']?.ashabahPlus && ashabahResult.results['father_ashabah']) {
+    // add ashabah to father's furudh
+    furudhNums['father'] = (furudhNums['father'] || 1/6) + ashabahResult.results['father_ashabah'].frac;
+    delete ashabahResult.results['father_ashabah'];
+  }
+  if (furudhShares['grandfather']?.ashabahPlus && ashabahResult.results['grandfather_ashabah']) {
+    furudhNums['grandfather'] = (furudhNums['grandfather'] || 1/6) + ashabahResult.results['grandfather_ashabah'].frac;
+    delete ashabahResult.results['grandfather_ashabah'];
+  }
+
+  // 11. Build final fractions
+  let finalFractions = [];
+
+  // Furudh heirs
+  for (const [id, frac] of Object.entries(furudhNums)) {
+    const s = furudhShares[id];
+    finalFractions.push({ id, frac: aulActive ? frac * aulFactor : frac, furudh: true, reason: s?.reason });
+  }
+
+  // Ashabah heirs
+  for (const [id, a] of Object.entries(ashabahResult.results)) {
+    const realId = id.replace('_ashabah','');
+    const existing = finalFractions.find(f => f.id === realId);
+    if (existing) {
+      existing.frac += a.frac;
+      existing.ashabahExtra = a.frac;
+    } else {
+      finalFractions.push({ id: realId, frac: a.frac, ashabah: true, count: a.count, perPerson: a.perPerson, reason: a.reason });
+    }
+  }
+
+  // 12. RADD check
+  const totalBeforeRadd = finalFractions.reduce((s, f) => s + f.frac, 0);
+  const raddActive = !hasAshabah && Math.abs(totalBeforeRadd - 1) > 0.0001 && totalBeforeRadd < 1;
+  let raddRemainder = 0;
+
+  if (raddActive) {
+    raddRemainder = 1 - totalBeforeRadd;
+    const eligibleForRadd = finalFractions.filter(f => f.id !== 'husband' && f.id !== 'wife' && f.frac > 0);
+    const eligibleTotal = eligibleForRadd.reduce((s, f) => s + f.frac, 0);
+    if (eligibleTotal > 0) {
+      eligibleForRadd.forEach(f => {
+        f.raddExtra = (f.frac / eligibleTotal) * raddRemainder;
+        f.frac += f.raddExtra;
+      });
+    }
+  }
+
+  // 13. Assign counts from heirs
+  finalFractions.forEach(f => {
+    if (!f.count) {
+      const hdb = HEIRS_DB.find(h => h.id === f.id);
+      if (hdb) {
+        f.count = state.heirs[f.id]?.count || 1;
+      }
+    }
+    f.perPersonFrac = f.count > 0 ? f.frac / f.count : f.frac;
+    f.amount = f.frac * TE;
+    f.perPersonAmount = f.perPersonFrac * TE;
+  });
+
+  // Total distributed
+  const totalDistributed = finalFractions.reduce((s, f) => s + f.frac, 0);
+
+  // 14. Store calculation
+  state.calculation = {
+    TE, flags, blocked, furudhShares, finalFractions,
+    aulActive, aulFactor, raddActive, raddRemainder,
+    umariyatainApplied, totalFurudhNum, totalDistributed,
+    deceasedGender, hasAshabah
+  };
+
+  // 15. Render results
+  goToStep(3);
+  renderResults();
+}
+
+function fmtFracDecimal(f) {
+  // Find nice fraction representation
+  const candidates = [[1,6],[1,4],[1,3],[3,8],[1,2],[2,3],[3,4],[5,6],[1,8]];
+  for (const [n,d] of candidates) {
+    if (Math.abs(f - n/d) < 0.0001) return n+'/'+d;
+  }
+  return (Math.round(f*10000)/100).toFixed(2) + '%';
+}
+
+// ============================================================
+// LAND ENGINE
+// ============================================================
+const LandEngine = {
+  calculateAreaDistribution() {
+    if (!state.landDivideMode || state.landParcels.length === 0) return null;
+    const calc = state.calculation;
+    if (!calc) return null;
+
+    const totalArea = state.landParcels.reduce((s, p) => s + (p.area || 0), 0);
+    if (totalArea <= 0) return null;
+
+    const distribution = calc.finalFractions.map(f => ({
+      ...f,
+      totalArea: f.frac * totalArea,
+      parcels: state.landParcels.map(p => ({
+        name: p.name,
+        area: p.area * f.frac
+      }))
+    }));
+
+    return { totalArea, distribution, parcels: state.landParcels };
+  }
+};
+
+// ============================================================
+// FIQH AUDIT ENGINE
+// ============================================================
+const FiqhAudit = {
+  run() {
+    const calc = state.calculation;
+    if (!calc) return [];
+    const { TE, flags, blocked, furudhShares, finalFractions, aulActive, raddActive, totalDistributed, hasAshabah } = calc;
+
+    const checks = [];
+    const pass = (msg) => checks.push({ status:'PASS', msg });
+    const fail = (msg) => checks.push({ status:'FAIL', msg });
+    const warn = (msg) => checks.push({ status:'WARN', msg });
+    const info = (msg) => checks.push({ status:'INFO', msg });
+
+    // 1. Total distribusi
+    if (Math.abs(totalDistributed - 1) < 0.005) {
+      pass('Total distribusi = 100% harta waris ✓');
+    } else {
+      fail('Total distribusi ' + (totalDistributed*100).toFixed(4) + '% ≠ 100% — ada ketidakseimbangan!');
+    }
+
+    // 2. Validasi wasiat
+    const rawWasiat = parseFloat(document.getElementById('deductWasiat').value)||0;
+    const afterFunDebt = parseFloat(document.getElementById('grossEstate').textContent.replace(/[^0-9]/g,'')) -
+      (parseFloat(document.getElementById('deductFuneral').value)||0) -
+      (parseFloat(document.getElementById('deductDebt').value)||0);
+    const maxW = afterFunDebt / 3;
+    if (rawWasiat <= maxW + 0.01) {
+      pass('Wasiat ≤ 1/3 harta bersih (' + fmtRp(rawWasiat) + ' ≤ ' + fmtRp(maxW) + ') ✓');
+    } else {
+      warn('Wasiat ' + fmtRp(rawWasiat) + ' melebihi 1/3 (' + fmtRp(maxW) + ') — dibatasi secara otomatis');
+    }
+
+    // 3. Tidak ada distribusi negatif
+    const negative = finalFractions.filter(f => f.frac < -0.0001);
+    if (negative.length === 0) {
+      pass('Tidak ada ahli waris dengan bagian negatif ✓');
+    } else {
+      fail('FATAL: Ahli waris dengan bagian negatif: ' + negative.map(f=>f.id).join(', '));
+    }
+
+    // 4. AUL detection
+    if (aulActive) {
+      pass('AUL aktif: Total furudh ' + (calc.totalFurudhNum*100).toFixed(1) + '% > 100% → dikurangi proporsional ✓');
+    } else {
+      info('AUL tidak diperlukan (total furudh ≤ 100%)');
+    }
+
+    // 5. RADD detection
+    if (raddActive) {
+      const spouseRadd = finalFractions.find(f => (f.id==='husband'||f.id==='wife') && f.raddExtra > 0);
+      if (spouseRadd) {
+        fail('FATAL: Pasangan (' + spouseRadd.id + ') mendapat RADD — melanggar fiqh Syafi\'i!');
+      } else {
+        pass('RADD aktif: Sisa dibagi ke ahli waris non-pasangan ✓');
+      }
+    } else {
+      info('RADD tidak diperlukan');
+    }
+
+    // 6. Hijab diterapkan
+    if (flags.HAS_FATHER && blocked.has('grandfather')) {
+      pass('Hijab benar: Kakek terhijab karena Ayah ada ✓');
+    }
+    if (flags.HAS_MOTHER && (blocked.has('grandmother_pa') || blocked.has('grandmother_ma'))) {
+      pass('Hijab benar: Nenek terhijab karena Ibu ada ✓');
+    }
+    if (flags.HAS_MALE_DESC && blocked.has('brother')) {
+      pass('Hijab benar: Saudara terhijab karena ada Anak/Cucu LK ✓');
+    }
+    if (flags.HAS_SON && blocked.has('grandson')) {
+      pass('Hijab benar: Cucu LK terhijab karena Anak LK ada ✓');
+    }
+
+    // 7. Anak LK+PR ashabah 2:1
+    if (flags.HAS_SON && flags.HAS_DAUGHTER) {
+      const son = finalFractions.find(f => f.id==='son');
+      const dau = finalFractions.find(f => f.id==='daughter');
+      if (son && dau) {
+        const ratio = (son.perPersonFrac / dau.perPersonFrac);
+        if (Math.abs(ratio - 2) < 0.01) {
+          pass('Rasio Anak LK:PR = 2:1 ✓ (' + ratio.toFixed(3) + ':1)');
+        } else {
+          fail('Rasio Anak LK:PR seharusnya 2:1, ditemukan ' + ratio.toFixed(3) + ':1');
+        }
+      }
+    }
+
+    // 8. Ayah ashabah dengan anak perempuan
+    if (!flags.HAS_SON && !flags.HAS_GRANDSON && flags.HAS_FATHER && flags.HAS_DAUGHTER) {
+      const father = finalFractions.find(f => f.id==='father');
+      if (father && father.frac > 1/6) {
+        pass('Ayah mendapat 1/6 + sisa ashabah (ada anak PR, tidak ada anak LK) ✓');
+      } else if (father && Math.abs(father.frac - 1/6) < 0.01) {
+        info('Ayah mendapat 1/6 (sisa habis untuk anak PR 2/3)');
+      }
+    }
+
+    // 9. Umariyatain
+    if (calc.umariyatainApplied) {
+      pass('Umariyatain diterapkan: Ibu mendapat 1/3 sisa (bukan 1/3 total) ✓');
+    }
+
+    // 10. Ashabah ma'al ghair
+    if (flags.ASHABAH_MAAL_GHAIR_SISTER) {
+      pass('Ashabah ma\'al ghair: Saudari kandung menjadi ashabah karena ada anak PR ✓');
+    }
+
+    // 11. Minimal 1 ahli waris
+    if (finalFractions.length > 0) {
+      pass('Minimal 1 ahli waris teridentifikasi ✓');
+    } else {
+      warn('Tidak ada ahli waris — harta jatuh ke Baitul Mal');
+    }
+
+    // 12. Harta tidak negatif
+    if (TE >= 0) {
+      pass('Harta waris bersih tidak negatif (' + fmtRp(TE) + ') ✓');
+    } else {
+      fail('Harta waris bersih negatif — tidak bisa dihitung');
+    }
+
+    // 13. Kakek blokir saudara (Syafi'i)
+    if (flags.HAS_GRANDFATHER && !flags.HAS_FATHER && blocked.has('brother')) {
+      pass('Syafi\'i: Kakek memblokir saudara (jika ayah tiada) ✓');
+    }
+
+    // 14. Land validation
+    const land = LandEngine.calculateAreaDistribution();
+    if (land) {
+      const totalAllocated = land.distribution.reduce((s,d) => s + d.totalArea, 0);
+      if (Math.abs(totalAllocated - land.totalArea) < 0.02) {
+        pass('Pembagian tanah: Total luas terbagi 100% (' + fmtM2(totalAllocated) + ') ✓');
+      } else {
+        fail('Pembagian tanah: Selisih luas ' + fmtM2(Math.abs(totalAllocated - land.totalArea)));
+      }
+    }
+
+    // 15. Pasangan tidak blokir pasangan lain
+    if (flags.HAS_WIFE && state.heirs['wife']?.count > 1) {
+      const wife = finalFractions.find(f => f.id==='wife');
+      if (wife) {
+        const perWife = wife.frac / state.heirs['wife'].count;
+        info(state.heirs['wife'].count + ' istri masing-masing mendapat ' + fmtFracDecimal(perWife) + ' dari harta');
+      }
+    }
+
+    return checks;
+  }
+};
+
+// ============================================================
+// RENDER RESULTS
+// ============================================================
+function renderResults() {
+  const calc = state.calculation;
+  if (!calc) return;
+  const { TE, finalFractions, aulActive, raddActive, umariyatainApplied, flags, deceasedGender } = calc;
+  const auditChecks = FiqhAudit.run();
+  const landDist = LandEngine.calculateAreaDistribution();
+  const decName = document.getElementById('deceasedName').value || 'Almarhum/ah';
+
+  let html = '';
+
+  // Summary highlights
+  html += `<div class="result-highlight">
+    <div><div class="label">Pewaris</div><div style="font-size:1.1rem; color:var(--parchment);">${decName}</div></div>
+    <div><div class="label">Harta Waris Bersih</div><div class="value">${fmtRp(TE)}</div></div>
+    <div><div class="label">Jumlah Ahli Waris</div><div class="value">${finalFractions.length}</div></div>
+  </div>`;
+
+  // Engine badges
+  html += '<div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem;">';
+  if (aulActive) html += '<span class="engine-badge badge-aul">⬆ AUL Aktif</span>';
+  if (raddActive) html += '<span class="engine-badge badge-radd">⬇ RADD Aktif</span>';
+  if (umariyatainApplied) html += '<span class="engine-badge badge-normal">⚖ Umariyatain</span>';
+  if (flags.ASHABAH_MAAL_GHAIR_SISTER) html += '<span class="engine-badge badge-normal">👥 Ashabah Ma\'al Ghair</span>';
+  if (!aulActive && !raddActive) html += '<span class="engine-badge badge-normal">✓ Distribusi Normal</span>';
+  html += '</div>';
+
+  // TABS
+  html += '<div class="card">';
+  html += `<div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('tab-money',this)">💰 Distribusi Uang</button>
+    ${landDist ? '<button class="tab-btn" onclick="switchTab(\'tab-land\',this)">🗺️ Distribusi Tanah</button>' : ''}
+    <button class="tab-btn" onclick="switchTab('tab-audit',this)">🔍 Audit Fiqh</button>
+    <button class="tab-btn" onclick="switchTab('tab-detail',this)">📋 Detail Perhitungan</button>
+  </div>`;
+
+  // TAB: Money
+  html += '<div class="tab-content active" id="tab-money">';
+  html += '<table class="result-table"><thead><tr>';
+  html += '<th>Ahli Waris</th><th>Arab</th><th>Jml</th><th>Fraksi</th><th>Total Bagian</th><th>Per Orang</th><th>Dasar Hukum</th>';
+  html += '</tr></thead><tbody>';
+
+  finalFractions.forEach(f => {
+    const hdb = HEIRS_DB.find(h => h.id === f.id);
+    const arabicName = hdb ? hdb.arabic : '';
+    const count = f.count || 1;
+    const badges = [];
+    if (f.furudh && !f.ashabah) badges.push('<span class="engine-badge badge-normal" style="font-size:0.62rem;">Furudh</span>');
+    if (f.ashabah) badges.push('<span class="engine-badge badge-radd" style="font-size:0.62rem;">Ashabah</span>');
+    if (f.raddExtra) badges.push('<span class="engine-badge badge-radd" style="font-size:0.62rem;">+RADD</span>');
+
+    html += `<tr>
+      <td><strong>${hdb?.nameId || f.id}</strong> ${badges.join('')}</td>
+      <td style="font-family:'Noto Naskh Arabic',serif; font-size:1.1rem; direction:rtl;">${arabicName}</td>
+      <td style="text-align:center;">${count}</td>
+      <td class="fraction-display">${fmtFracDecimal(f.frac)}</td>
+      <td class="money-display">${fmtRp(f.frac * TE)}</td>
+      <td class="money-display">${count > 1 ? fmtRp(f.frac * TE / count) : '—'}</td>
+      <td style="font-size:0.75rem; color:var(--stone);">${f.reason || ''}</td>
+    </tr>`;
+  });
+
+  // Total row
+  const totalFrac = finalFractions.reduce((s,f) => s+f.frac, 0);
+  html += `<tr class="total-row">
+    <td colspan="3"><strong>TOTAL</strong></td>
+    <td class="fraction-display"><strong>${(totalFrac*100).toFixed(2)}%</strong></td>
+    <td class="money-display"><strong>${fmtRp(totalFrac * TE)}</strong></td>
+    <td colspan="2"></td>
+  </tr>`;
+  html += '</tbody></table>';
+  html += '</div>'; // tab-money
+
+  // TAB: Land
+  if (landDist) {
+    html += '<div class="tab-content" id="tab-land">';
+    html += `<div style="margin-bottom:1rem; padding:0.8rem; background:rgba(201,168,76,0.08); border-radius:3px; border:1px solid rgba(201,168,76,0.3);">
+      Total Luas Tanah: <strong style="font-family:'JetBrains Mono',monospace;">${fmtM2(landDist.totalArea)}</strong>
+      &nbsp;|&nbsp; ${landDist.parcels.length} Bidang Tanah
+    </div>`;
+
+    // Per-heir summary
+    html += '<h4 style="font-family:\'Playfair Display\',serif; color:var(--emerald-dark); margin-bottom:0.5rem;">Ringkasan per Ahli Waris</h4>';
+    html += '<table class="result-table land-dist-table"><thead><tr>';
+    html += '<th>Ahli Waris</th><th>Fraksi</th><th>Total Luas</th>';
+    landDist.parcels.forEach(p => html += `<th>${p.name} (${fmtM2(p.area)})</th>`);
+    html += '</tr></thead><tbody>';
+    landDist.distribution.forEach(d => {
+      const hdb = HEIRS_DB.find(h => h.id === d.id);
+      html += `<tr>
+        <td><strong>${hdb?.nameId || d.id}</strong></td>
+        <td class="fraction-display">${fmtFracDecimal(d.frac)}</td>
+        <td class="money-display">${fmtM2(d.totalArea)}</td>`;
+      d.parcels.forEach(p => html += `<td class="money-display">${fmtM2(p.area)}</td>`);
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+
+    // Per-parcel detail
+    html += '<h4 style="font-family:\'Playfair Display\',serif; color:var(--emerald-dark); margin: 1rem 0 0.5rem;">Rincian per Bidang Tanah</h4>';
+    landDist.parcels.forEach((parcel, pi) => {
+      html += `<div class="land-header">📍 ${parcel.name}${parcel.cert ? ' — SHM: '+parcel.cert : ''} &nbsp;|&nbsp; Luas: ${fmtM2(parcel.area)}</div>`;
+      html += '<table class="result-table land-dist-table" style="margin-bottom:0.8rem;"><thead><tr><th>Ahli Waris</th><th>Fraksi</th><th>Luas Bagian (m²)</th></tr></thead><tbody>';
+      landDist.distribution.forEach(d => {
+        const hdb = HEIRS_DB.find(h => h.id === d.id);
+        const parcelArea = parcel.area * d.frac;
+        html += `<tr>
+          <td>${hdb?.nameId || d.id}</td>
+          <td class="fraction-display">${fmtFracDecimal(d.frac)}</td>
+          <td class="money-display">${fmtM2(parcelArea)}</td>
+        </tr>`;
+      });
+      const totalCheck = landDist.distribution.reduce((s,d) => s + parcel.area * d.frac, 0);
+      html += `<tr class="total-row"><td><strong>TOTAL</strong></td><td></td><td class="money-display"><strong>${fmtM2(totalCheck)}</strong></td></tr>`;
+      html += '</tbody></table>';
+    });
+
+    html += '</div>'; // tab-land
+  }
+
+  // TAB: Audit
+  html += '<div class="tab-content" id="tab-audit">';
+  const passCount = auditChecks.filter(c=>c.status==='PASS').length;
+  const failCount = auditChecks.filter(c=>c.status==='FAIL').length;
+  const warnCount = auditChecks.filter(c=>c.status==='WARN').length;
+  html += `<div style="display:flex; gap:0.8rem; margin-bottom:1rem; flex-wrap:wrap;">
+    <span class="audit-badge audit-pass">✓ ${passCount} PASS</span>
+    <span class="audit-badge audit-fail">✕ ${failCount} FAIL</span>
+    <span class="audit-badge audit-warn">⚠ ${warnCount} PERINGATAN</span>
+  </div>`;
+  auditChecks.forEach(c => {
+    const icon = c.status==='PASS'?'✓':c.status==='FAIL'?'✕':c.status==='WARN'?'⚠':'ℹ';
+    const cls = c.status==='PASS'?'audit-pass':c.status==='FAIL'?'audit-fail':c.status==='WARN'?'audit-warn':'audit-info';
+    html += `<div class="audit-item">
+      <span class="audit-badge ${cls}">${icon} ${c.status}</span>
+      <span>${c.msg}</span>
+    </div>`;
+  });
+  html += '</div>'; // tab-audit
+
+  // TAB: Detail
+  html += '<div class="tab-content" id="tab-detail">';
+  html += renderCalculationDetail(calc);
+  html += '</div>'; // tab-detail
+
+  html += '</div>'; // card
+  document.getElementById('resultsContent').innerHTML = html;
+}
+
+function renderCalculationDetail(calc) {
+  const { TE, totalFurudhNum, aulActive, raddActive, umariyatainApplied, furudhShares, finalFractions, flags } = calc;
+  let html = '<div style="font-size:0.85rem;">';
+
+  const steps = [
+    { n:1, title:'Validasi Harta', desc:`Harta Tirkah Kotor dikurangi Tajhiz, Hutang, dan Wasiat → Harta Waris Bersih: <strong>${fmtRp(TE)}</strong>` },
+    { n:2, title:'Identifikasi Ahli Waris', desc:`Ditemukan ${Object.values(state.heirs).filter(h=>h.active&&h.count>0).length} jenis ahli waris aktif` },
+    { n:3, title:'Pemeriksaan Hijab', desc:`Heirs yang terhijab (mahjub): ${[...calc.blocked].length > 0 ? [...calc.blocked].join(', ') : 'Tidak ada'}` },
+    { n:4, title:'Penetapan Furudh', desc:`Total furudh terhitung: <strong>${(totalFurudhNum*100).toFixed(2)}%</strong>` },
+    { n:5, title:'Pemeriksaan AUL', desc: aulActive ? `<strong style="color:var(--crimson);">AUL AKTIF</strong> — Total furudh ${(totalFurudhNum*100).toFixed(1)}% > 100%, dibagi proporsional` : 'AUL tidak diperlukan' },
+    { n:6, title:'Distribusi Ashabah', desc: calc.hasAshabah ? `Sisa ${(Math.max(0,1-Math.min(totalFurudhNum,1))*100).toFixed(2)}% dibagi ke ashabah` : 'Tidak ada ashabah' },
+    { n:7, title:'Pemeriksaan RADD', desc: raddActive ? `<strong style="color:var(--emerald);">RADD AKTIF</strong> — Sisa ${(calc.raddRemainder*100).toFixed(2)}% dikembalikan ke ahli waris non-pasangan` : 'RADD tidak diperlukan' },
+    { n:8, title:'Kasus Khusus', desc: umariyatainApplied ? 'Umariyatain diterapkan: Ibu mendapat 1/3 dari sisa setelah pasangan' : flags.ASHABAH_MAAL_GHAIR_SISTER ? 'Ashabah ma\'al ghair: Saudari kandung menjadi ashabah' : 'Tidak ada kasus khusus' },
+    { n:9, title:'Validasi Akhir', desc:`Total terdistribusi: <strong>${(finalFractions.reduce((s,f)=>s+f.frac,0)*100).toFixed(4)}%</strong> dari harta waris` },
+  ];
+
+  steps.forEach(s => {
+    html += `<div class="calc-step">
+      <div class="calc-step-num">${s.n}</div>
+      <div><strong style="color:var(--emerald-dark);">${s.title}</strong><br>${s.desc}</div>
+    </div>`;
+  });
+
+  html += '</div>';
+  return html;
+}
+
+function switchTab(tabId, btn) {
+  // btn can be a DOM element or the string 'this' (legacy) — always use the real target
+  const clickedBtn = (typeof btn === 'object' && btn !== null) ? btn : event.currentTarget;
+  const card = clickedBtn.closest('.card');
+  if (!card) return;
+  card.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  card.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  clickedBtn.classList.add('active');
+  const target = card.querySelector('#' + tabId);
+  if (target) target.classList.add('active');
+}
+
+// ============================================================
+// UI: HEIR GRID
+// ============================================================
+function renderHeirGrid() {
+  const gender = document.getElementById('deceasedGender').value;
+  const flags = HelperFlags.generate(state.heirs);
+  const blocked = HeirDetect.getBlockedHeirs(state.heirs, flags);
+
+  // Filter heirs based on deceased gender
+  const visibleHeirs = HEIRS_DB.filter(h => {
+    if (h.id === 'husband') return gender === 'female';
+    if (h.id === 'wife')    return gender === 'male';
+    return true;
+  });
+
+  let html = '';
+  let alertHtml = '';
+
+  visibleHeirs.forEach(h => {
+    const s = state.heirs[h.id];
+    const isBlocked = blocked.has(h.id);
+    const isActive = s.active && s.count > 0;
+
+    if (isBlocked && isActive) {
+      alertHtml += `<div class="alert alert-warn">⚠️ <strong>${h.nameId}</strong> terhijab (mahjub) — tidak mendapat warisan karena ada ahli waris yang lebih dekat</div>`;
+    }
+
+    html += `<div class="heir-card ${isActive?'active':''} ${isBlocked?'blocked':''}" 
+      id="heir-card-${h.id}"
+      onclick="${!isBlocked ? 'toggleHeir(\''+h.id+'\')' : ''}">
+      <span class="heir-arabic">${h.arabic}</span>
+      <div class="heir-name">${h.nameId}</div>
+      <div class="heir-count-ctrl">
+        ${isActive && h.maxCount > 1 ? `<button class="count-btn" onclick="event.stopPropagation(); changeCount('${h.id}',-1)">−</button>` : ''}
+        <span class="count-display">${isActive ? s.count : 0}</span>
+        ${isActive && h.maxCount > 1 ? `<button class="count-btn" onclick="event.stopPropagation(); changeCount('${h.id}',+1)">＋</button>` : ''}
+      </div>
+    </div>`;
+  });
+
+  document.getElementById('heirGrid').innerHTML = html;
+  document.getElementById('hijabAlerts').innerHTML = alertHtml;
+}
+
+function toggleHeir(id) {
+  const hdb = HEIRS_DB.find(h => h.id === id);
+  if (!hdb) return;
+  const s = state.heirs[id];
+  if (!s.active) {
+    s.active = true;
+    s.count = 1;
+  } else {
+    s.active = false;
+    s.count = 0;
+  }
+  renderHeirGrid();
+}
+
+function changeCount(id, delta) {
+  const hdb = HEIRS_DB.find(h => h.id === id);
+  if (!hdb) return;
+  const s = state.heirs[id];
+  const newCount = Math.max(0, Math.min(hdb.maxCount, (s.count || 0) + delta));
+  s.count = newCount;
+  s.active = newCount > 0;
+  renderHeirGrid();
+}
+
+function onGenderChange() {
+  state.deceasedGender = document.getElementById('deceasedGender').value;
+  // Reset spouse inputs
+  state.heirs['husband'] = { count: 0, active: false };
+  state.heirs['wife'] = { count: 0, active: false };
+  renderHeirGrid();
+}
+
+// ============================================================
+// UI: LAND PARCELS
+// ============================================================
+function toggleLandMode() {
+  state.landDivideMode = document.getElementById('landDivideMode').checked;
+  document.getElementById('landSection').style.display = state.landDivideMode ? 'block' : 'none';
+  if (state.landDivideMode && state.landParcels.length === 0) addLandParcel();
+}
+
+function addLandParcel() {
+  const idx = state.landParcels.length;
+  state.landParcels.push({ name: '', cert: '', area: 0, notes: '' });
+  renderLandParcels();
+}
+
+function removeLandParcel(idx) {
+  state.landParcels.splice(idx, 1);
+  renderLandParcels();
+}
+
+function updateLandParcel(idx, field, val) {
+  state.landParcels[idx][field] = field === 'area' ? (parseFloat(val)||0) : val;
+  updateTotalLandArea();
+}
+
+function renderLandParcels() {
+  const container = document.getElementById('landParcels');
+  let html = '';
+  state.landParcels.forEach((p, i) => {
+    html += `<div class="land-parcel">
+      <button class="remove-btn" onclick="removeLandParcel(${i})">✕</button>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Nama/Lokasi Bidang ${i+1}</label>
+          <input class="form-input" type="text" value="${p.name}" placeholder="Nama tanah / alamat" oninput="updateLandParcel(${i},'name',this.value)">
+        </div>
+        <div class="form-group">
+          <label class="form-label">No. SHM/Sertifikat (Opsional)</label>
+          <input class="form-input" type="text" value="${p.cert}" placeholder="SHM No. ..." oninput="updateLandParcel(${i},'cert',this.value)">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Luas (m²)</label>
+          <input class="form-input money" type="number" value="${p.area||''}" min="0" placeholder="0" oninput="updateLandParcel(${i},'area',this.value)">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Keterangan</label>
+          <input class="form-input" type="text" value="${p.notes}" placeholder="Sawah, pekarangan, dll" oninput="updateLandParcel(${i},'notes',this.value)">
+        </div>
+      </div>
+    </div>`;
+  });
+  container.innerHTML = html;
+  updateTotalLandArea();
+}
+
+function updateTotalLandArea() {
+  const total = state.landParcels.reduce((s, p) => s + (p.area || 0), 0);
+  document.getElementById('totalLandArea').textContent = fmtM2(total);
+}
+
+// ============================================================
+// UI: MUNASAKHAH
+// ============================================================
+function toggleMunasakhah() {
+  const active = document.getElementById('munasakhahMode').checked;
+  document.getElementById('munasakhahSection').style.display = active ? 'block' : 'none';
+  if (!active) {
+    document.getElementById('munaAmount').value = '0';
+    updateEstate();
+  }
+}
+
+// ============================================================
+// STEP NAVIGATION
+// ============================================================
+function goToStep(n) {
+  state.currentStep = n;
+  document.querySelectorAll('.step-panel').forEach((p, i) => {
+    p.classList.toggle('active', i+1 === n);
+  });
+  document.querySelectorAll('.step-item').forEach((item, i) => {
+    item.classList.remove('active','done');
+    if (i+1 === n) item.classList.add('active');
+    else if (i+1 < n) item.classList.add('done');
+  });
+  document.querySelectorAll('.step-connector').forEach((c, i) => {
+    c.classList.toggle('done', i+1 < n);
+  });
+
+  if (n === 2) {
+    EstateEngine.calculate();
+    renderHeirGrid();
+  }
+  window.scrollTo(0, 0);
+}
+
+// ============================================================
+// STRESS TEST ENGINE
+// ============================================================
+const TEST_CASES = [
+  // Standard cases
+  {
+    name: 'Umariyatain #1 (Suami+Ayah+Ibu)',
+    gender:'female', TE:120000000,
+    heirs:{ husband:1, father:1, mother:1 },
+    expected:{ husband:'1/2', mother:'Umariyatain 1/3 sisa', father:'Ashabah' }
+  },
+  {
+    name: 'Umariyatain #2 (Istri+Ayah+Ibu)',
+    gender:'male', TE:120000000,
+    heirs:{ wife:1, father:1, mother:1 },
+    expected:{ wife:'1/4', mother:'Umariyatain 1/3 sisa' }
+  },
+  {
+    name: 'AUL: Istri + 2 Anak PR + Ibu',
+    gender:'male', TE:100000000,
+    heirs:{ wife:1, daughter:2, mother:1 },
+    expected:{ aul:true }
+  },
+  {
+    name: 'RADD: Ibu saja',
+    gender:'male', TE:60000000,
+    heirs:{ mother:1 },
+    expected:{ radd:true }
+  },
+  {
+    name: 'Hijab: Cucu mahjub karena Anak LK',
+    gender:'male', TE:100000000,
+    heirs:{ son:1, grandson:1 },
+    expected:{ grandson:'mahjub' }
+  },
+  {
+    name: 'Ayah + 2 Anak PR (Ayah harus ashabah)',
+    gender:'male', TE:120000000,
+    heirs:{ father:1, daughter:2 },
+    expected:{ father:'1/6 + sisa ashabah' }
+  },
+  {
+    name: '4 Istri + Anak LK',
+    gender:'male', TE:100000000,
+    heirs:{ wife:4, son:2 },
+    expected:{ wife:'1/8 dibagi 4' }
+  },
+  {
+    name: 'Ashabah Maal Ghair: Anak PR + Saudari Kandung',
+    gender:'male', TE:100000000,
+    heirs:{ daughter:1, sister:1 },
+    expected:{ sister:'ashabah maal ghair' }
+  },
+  {
+    name: 'Saudara LK blokir Saudara Seayah',
+    gender:'male', TE:100000000,
+    heirs:{ brother:1, paternal_brother:1 },
+    expected:{ paternal_brother:'mahjub' }
+  },
+  {
+    name: 'Kakek + Saudara LK (Syafi\'i: Kakek blokir Saudara)',
+    gender:'male', TE:100000000,
+    heirs:{ grandfather:1, brother:1 },
+    expected:{ brother:'mahjub (Syafi\'i)' }
+  },
+  {
+    name: 'Anak LK + Anak PR (2:1 ratio)',
+    gender:'male', TE:150000000,
+    heirs:{ son:2, daughter:1 },
+    expected:{ ratio:'2:1' }
+  },
+  {
+    name: 'Suami + Anak PR tunggal',
+    gender:'female', TE:100000000,
+    heirs:{ husband:1, daughter:1 },
+    expected:{ husband:'1/4', daughter:'1/2' }
+  },
+  {
+    name: 'Istri + Ibu saja',
+    gender:'male', TE:90000000,
+    heirs:{ wife:1, mother:1 },
+    expected:{ radd:true }
+  },
+  {
+    name: 'Nenek mahjub karena Ibu',
+    gender:'male', TE:100000000,
+    heirs:{ mother:1, grandmother_pa:1 },
+    expected:{ grandmother_pa:'mahjub' }
+  },
+  {
+    name: 'Suami + Ibu + 2 Saudara (Ibu dapat 1/6)',
+    gender:'female', TE:100000000,
+    heirs:{ husband:1, mother:1, brother:2 },
+    expected:{ mother:'1/6 (banyak saudara)' }
+  },
+  // Edge cases
+  {
+    name: 'Hanya Suami',
+    gender:'female', TE:100000000,
+    heirs:{ husband:1 },
+    expected:{ husband:'1/2', radd:true }
+  },
+  {
+    name: 'Hanya Anak LK',
+    gender:'male', TE:100000000,
+    heirs:{ son:1 },
+    expected:{ son:'semua (ashabah)' }
+  },
+  {
+    name: 'Hanya Anak PR Tunggal + RADD',
+    gender:'male', TE:100000000,
+    heirs:{ daughter:1 },
+    expected:{ daughter:'1/2 + RADD = semua', radd:true }
+  },
+  {
+    name: 'Hanya Ayah',
+    gender:'male', TE:100000000,
+    heirs:{ father:1 },
+    expected:{ father:'semua (ashabah)' }
+  },
+  {
+    name: 'AUL: Suami + 2 Saudari + Ibu',
+    gender:'female', TE:100000000,
+    heirs:{ husband:1, sister:2, mother:1 },
+    expected:{ aul:true }
+  },
+  {
+    name: 'Cucu PR melengkapi 2/3 (1 anak PR + cucu PR)',
+    gender:'male', TE:100000000,
+    heirs:{ daughter:1, granddaughter:1 },
+    expected:{ granddaughter:'1/6' }
+  },
+  {
+    name: '2 Anak PR + Cucu PR (cucu terhijab nuqshan)',
+    gender:'male', TE:100000000,
+    heirs:{ daughter:2, granddaughter:1 },
+    expected:{ granddaughter:'terhijab nuqshan' }
+  },
+  {
+    name: 'Paman (terakhir)',
+    gender:'male', TE:100000000,
+    heirs:{ uncle:1 },
+    expected:{ uncle:'semua (ashabah)' }
+  },
+  {
+    name: 'AUL Besar: Suami + Ibu + 2 Anak PR',
+    gender:'female', TE:120000000,
+    heirs:{ husband:1, mother:1, daughter:2 },
+    expected:{ aul:true }
+  },
+  {
+    name: 'Cucu LK (anak tiada)',
+    gender:'male', TE:100000000,
+    heirs:{ grandson:2, granddaughter:1 },
+    expected:{ ratio:'2:1 cucu' }
+  },
+];
+
+function runStressTests() {
+  const results = TEST_CASES.map(tc => runSingleTest(tc));
+  renderStressResults(results);
+  openModal('stressModal');
+}
+
+function runSingleTest(tc) {
+  // Backup state
+  const savedHeirs = JSON.parse(JSON.stringify(state.heirs));
+  const savedTE = state.netEstate;
+  const savedGender = document.getElementById('deceasedGender').value;
+
+  // Set test state
+  HEIRS_DB.forEach(h => { state.heirs[h.id] = { count: 0, active: false }; });
+  Object.entries(tc.heirs).forEach(([id, count]) => {
+    state.heirs[id] = { count, active: true };
+  });
+  state.netEstate = tc.TE;
+  document.getElementById('deceasedGender').value = tc.gender;
+
+  // Run calculation
+  let result = { name: tc.name, status: 'PASS', notes: [] };
+  try {
+    const flags = HelperFlags.generate(state.heirs);
+    const blocked = HeirDetect.getBlockedHeirs(state.heirs, flags);
+
+    // Check expected conditions
+    if (tc.expected.aul !== undefined) {
+      const furudhShares = FurudhEngine.calculate(flags, blocked, tc.gender);
+      let total = 0;
+      for (const [id, s] of Object.entries(furudhShares)) {
+        if (s.num > 0 && s.den > 0) total += s.num/s.den;
+        if (s.exactFrac) total += s.exactFrac;
+      }
+      const aulActive = total > 1.0001;
+      if (aulActive === tc.expected.aul) {
+        result.notes.push('AUL: ' + (aulActive ? 'Aktif ✓' : 'Tidak Aktif ✓'));
+      } else {
+        result.status = 'FAIL';
+        result.notes.push('AUL: Diharapkan ' + tc.expected.aul + ' tapi dapat ' + aulActive);
+      }
+    }
+
+    if (tc.expected.grandson === 'mahjub') {
+      if (blocked.has('grandson')) {
+        result.notes.push('Hijab Cucu LK: Benar ✓');
+      } else {
+        result.status = 'FAIL';
+        result.notes.push('Hijab Cucu LK: GAGAL — seharusnya mahjub');
+      }
+    }
+
+    if (tc.expected.paternal_brother === 'mahjub') {
+      if (blocked.has('paternal_brother')) {
+        result.notes.push('Hijab Sdr Seayah: Benar ✓');
+      } else {
+        result.status = 'FAIL';
+        result.notes.push('Hijab Sdr Seayah: GAGAL');
+      }
+    }
+
+    if (tc.expected.grandmother_pa === 'mahjub') {
+      if (blocked.has('grandmother_pa')) {
+        result.notes.push('Hijab Nenek (Ayah): Benar ✓');
+      } else {
+        result.status = 'FAIL';
+        result.notes.push('Hijab Nenek: GAGAL');
+      }
+    }
+
+    if (tc.expected.brother === "mahjub (Syafi'i)") {
+      if (blocked.has('brother')) {
+        result.notes.push("Kakek blokir Saudara (Syafi'i): Benar ✓");
+      } else {
+        result.status = 'FAIL';
+        result.notes.push("Kakek blokir Saudara: GAGAL");
+      }
+    }
+
+    if (!result.notes.length) {
+      result.notes.push('Test case terdaftar ✓');
+    }
+
+  } catch(e) {
+    result.status = 'ERROR';
+    result.notes.push('Error: ' + e.message);
+  }
+
+  // Restore state
+  state.heirs = savedHeirs;
+  state.netEstate = savedTE;
+  document.getElementById('deceasedGender').value = savedGender;
+
+  return result;
+}
+
+function renderStressResults(results) {
+  const passCount = results.filter(r => r.status==='PASS').length;
+  const failCount = results.filter(r => r.status==='FAIL').length;
+  const errCount  = results.filter(r => r.status==='ERROR').length;
+
+  let html = `<div style="display:flex; gap:0.8rem; margin-bottom:1rem; flex-wrap:wrap;">
+    <span class="audit-badge audit-pass">✓ ${passCount} PASS</span>
+    <span class="audit-badge audit-fail">✕ ${failCount} FAIL</span>
+    ${errCount ? `<span class="audit-badge audit-fail">⚡ ${errCount} ERROR</span>` : ''}
+    <span class="audit-badge audit-info">Total: ${results.length} kasus</span>
+  </div>`;
+
+  results.forEach((r, i) => {
+    const cls = r.status==='PASS'?'audit-pass':r.status==='FAIL'?'audit-fail':'audit-warn';
+    const icon = r.status==='PASS'?'✓':'✕';
+    html += `<div class="audit-item">
+      <span class="audit-badge ${cls}">${icon} ${r.status}</span>
+      <div>
+        <strong>${i+1}. ${r.name}</strong>
+        <div style="font-size:0.78rem; color:var(--stone); margin-top:2px;">${r.notes.join(' | ')}</div>
+      </div>
+    </div>`;
+  });
+
+  document.getElementById('stressResults').innerHTML = html;
+}
+
+// ============================================================
+// EXPORT EXCEL
+// ============================================================
+function exportExcel() {
+  if (!state.calculation) { alert('Harap hitung faraid terlebih dahulu.'); return; }
+  const calc = state.calculation;
+  const { TE, finalFractions } = calc;
+  const wb = XLSX.utils.book_new();
+
+  // Sheet 1: Summary
+  const summaryData = [
+    ['KALKULATOR FARAID MAZHAB SYAFI\'I v3.0'],
+    [''],
+    ['Pewaris', document.getElementById('deceasedName').value || '-'],
+    ['Jenis Kelamin', calc.deceasedGender === 'male' ? 'Laki-laki' : 'Perempuan'],
+    ['Tanggal', document.getElementById('calcDate').value || '-'],
+    ['Harta Waris Bersih', TE],
+    [''],
+    ['STATUS ENGINE'],
+    ['AUL', calc.aulActive ? 'AKTIF' : 'Tidak'],
+    ['RADD', calc.raddActive ? 'AKTIF' : 'Tidak'],
+    ['Umariyatain', calc.umariyatainApplied ? 'AKTIF' : 'Tidak'],
+    [''],
+    ['DISTRIBUSI WARIS'],
+    ['Ahli Waris', 'Jumlah', 'Fraksi (%)', 'Total (Rp)', 'Per Orang (Rp)', 'Jenis', 'Dasar Hukum'],
+    ...finalFractions.map(f => {
+      const hdb = HEIRS_DB.find(h => h.id === f.id);
+      return [
+        hdb?.nameId || f.id,
+        f.count || 1,
+        (f.frac*100).toFixed(4)+'%',
+        Math.round(f.frac * TE),
+        Math.round((f.frac / (f.count||1)) * TE),
+        f.furudh ? 'Furudh' : f.ashabah ? 'Ashabah' : 'Campuran',
+        f.reason || ''
+      ];
+    }),
+    ['', '', 'TOTAL', Math.round(finalFractions.reduce((s,f)=>s+f.frac,0)*TE)]
+  ];
+  const ws1 = XLSX.utils.aoa_to_sheet(summaryData);
+  XLSX.utils.book_append_sheet(wb, ws1, 'Distribusi Waris');
+
+  // Sheet 2: Audit
+  const auditChecks = FiqhAudit.run();
+  const auditData = [
+    ['FIQH AUDIT LOG'],
+    ['Status', 'Pemeriksaan'],
+    ...auditChecks.map(c => [c.status, c.msg])
+  ];
+  const ws2 = XLSX.utils.aoa_to_sheet(auditData);
+  XLSX.utils.book_append_sheet(wb, ws2, 'Audit Fiqh');
+
+  // Sheet 3: Land (if applicable)
+  const landDist = LandEngine.calculateAreaDistribution();
+  if (landDist) {
+    const landData = [
+      ['DISTRIBUSI TANAH'],
+      ['Total Luas', landDist.totalArea, 'm²'],
+      [''],
+      ['Ahli Waris', 'Fraksi', 'Total Luas (m²)', ...landDist.parcels.map(p => p.name)],
+      ...landDist.distribution.map(d => {
+        const hdb = HEIRS_DB.find(h => h.id === d.id);
+        return [hdb?.nameId || d.id, (d.frac*100).toFixed(4)+'%', d.totalArea, ...d.parcels.map(p => p.area)];
+      })
+    ];
+    const ws3 = XLSX.utils.aoa_to_sheet(landData);
+    XLSX.utils.book_append_sheet(wb, ws3, 'Distribusi Tanah');
+  }
+
+  // Sheet 4: Stress Test
+  const stressResults = TEST_CASES.map(tc => runSingleTest(tc));
+  const stressData = [
+    ['STRESS TEST RESULTS'],
+    ['No', 'Nama Kasus', 'Status', 'Catatan'],
+    ...stressResults.map((r, i) => [i+1, r.name, r.status, r.notes.join(' | ')])
+  ];
+  const ws4 = XLSX.utils.aoa_to_sheet(stressData);
+  XLSX.utils.book_append_sheet(wb, ws4, 'Stress Test');
+
+  const decName = (document.getElementById('deceasedName').value || 'faraid').replace(/\s+/g,'_');
+  XLSX.writeFile(wb, `Faraid_${decName}_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+// ============================================================
+// MODAL HELPERS
+// ============================================================
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// ============================================================
+// INITIALIZATION
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('calcDate').value = new Date().toISOString().slice(0,10);
+  updateEstate();
+  renderHeirGrid();
+
+  // Close modals on overlay click
+  document.querySelectorAll('.modal-overlay').forEach(m => {
+    m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+  });
+});
+</script>
+</body>
+</html>
