@@ -1220,9 +1220,9 @@ const AshabahEngine = {
       const nDau = (flags.HAS_DAUGHTER && !blocked.has('daughter')) ? flags.N_DAUGHTER : 0;
       const totalUnits = nSon * 2 + nDau * 1;
       const perUnit = remainderFraction / totalUnits;
-      results['son']      = { frac: perUnit * 2, perPerson: perUnit * 2 / nSon, count: nSon, reason: 'Ashabah bi nafsihi (2 bagian per orang)' };
+      results['son']      = { frac: perUnit * 2 * nSon, perPerson: perUnit * 2, count: nSon, reason: 'Ashabah bi nafsihi (2 bagian per orang)' };
       if (nDau > 0) {
-        results['daughter'] = { frac: perUnit * nDau, perPerson: perUnit / 1, count: nDau, reason: 'Ashabah bil ghair (1 bagian per orang, 2:1 dengan anak LK)' };
+        results['daughter'] = { frac: perUnit * nDau, perPerson: perUnit, count: nDau, reason: 'Ashabah bil ghair (1 bagian per orang, 2:1 dengan anak LK)' };
       }
       return { results, consumed: remainderFraction };
     }
@@ -1233,7 +1233,7 @@ const AshabahEngine = {
       const nGd = (flags.HAS_GRANDDAUGHTER && !blocked.has('granddaughter') && furudhShares['granddaughter']?.isAshabah) ? flags.N_GRANDDAUGHTER : 0;
       const totalUnits = nGs * 2 + nGd * 1;
       const perUnit = remainderFraction / totalUnits;
-      results['grandson'] = { frac: perUnit * 2 * nGs / nGs, perPerson: perUnit * 2, count: nGs, reason: 'Cucu LK ashabah (2 bagian)' };
+      results['grandson'] = { frac: perUnit * 2 * nGs, perPerson: perUnit * 2, count: nGs, reason: 'Cucu LK ashabah (2 bagian)' };
       if (nGd > 0) {
         results['granddaughter'] = { frac: perUnit * nGd, perPerson: perUnit, count: nGd, reason: 'Cucu PR ashabah bil ghair (1 bagian)' };
       }
@@ -1269,7 +1269,7 @@ const AshabahEngine = {
       // maal ghair sisters also take ashabah
       const totalUnits = nBro * 2 + nSis * 1 + maalGhairSis * 1;
       const perUnit = remainderFraction / totalUnits;
-      results['brother'] = { frac: perUnit * 2 * nBro / nBro, perPerson: perUnit * 2, count: nBro, reason: 'Saudara LK kandung ashabah (2 unit)' };
+      results['brother'] = { frac: perUnit * 2 * nBro, perPerson: perUnit * 2, count: nBro, reason: 'Saudara LK kandung ashabah (2 unit)' };
       if (nSis + maalGhairSis > 0) {
         const sisCount = nSis + maalGhairSis;
         results['sister'] = { frac: perUnit * sisCount, perPerson: perUnit, count: sisCount, reason: 'Saudari kandung ashabah (1 unit)' };
@@ -1291,7 +1291,7 @@ const AshabahEngine = {
       const maalPs = (flags.HAS_PAT_SISTER && furudhShares['paternal_sister']?.maalGhair) ? flags.N_PAT_SISTER : 0;
       const totalUnits = nPb * 2 + (nPs + maalPs) * 1;
       const perUnit = remainderFraction / totalUnits;
-      results['paternal_brother'] = { frac: perUnit * 2, perPerson: perUnit * 2, count: nPb, reason: 'Saudara seayah ashabah (2 unit)' };
+      results['paternal_brother'] = { frac: perUnit * 2 * nPb, perPerson: perUnit * 2, count: nPb, reason: 'Saudara seayah ashabah (2 unit)' };
       if (nPs + maalPs > 0) {
         results['paternal_sister'] = { frac: perUnit * (nPs + maalPs), perPerson: perUnit, count: nPs + maalPs, reason: 'Saudari seayah ashabah (1 unit)' };
       }
